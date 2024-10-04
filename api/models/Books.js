@@ -46,6 +46,11 @@ const bookSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  status: {
+    type: String,
+    required: true,
+    enum: ["latest", "trending", "popular", "best-seller", "sold-out"],
+  },
   isListed: {
     type: Boolean,
     required: true,
