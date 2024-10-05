@@ -1,9 +1,22 @@
 // routes/books.route.js
 import express from "express";
-import { addBook } from "../controllers/book.controller";
+import multer from "multer";
+import { addBook } from "../controllers/book.controller.js";
+import { verifyToken } from "../utils/verifyUser.js";
 
 const router = express.Router();
+const upload = multer({ dest: "./uploads/" });
 
-router.post("/add-book", addBook);
+router.post(
+  "/add-book",
+  upload.fields([
+    { name: "image1", maxCount: 1 },
+    { name: "image2", maxCount: 1 },
+    { name: "image3", maxCount: 1 },
+    { name: "image4", maxCount: 1 },
+  ]),
+  verifyToken,
+  addBook
+);
 
 export default router;

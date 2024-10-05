@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
-import Category from "./category.model";
-import User from "./User";
+import mongoose from "mongoose";
+import Category from "./category.model.js";
+import User from "./user.model.js";
 
 const bookSchema = new mongoose.Schema({
   title: {
@@ -16,31 +16,33 @@ const bookSchema = new mongoose.Schema({
     required: true,
   },
   category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: Category,
+    type: String,
+    // ref: Category,
     required: true,
   },
   price: {
     type: Number,
     required: true,
   },
+  stock: {
+    type: Number,
+    required: true,
+  },
   Condition: {
     type: String,
-    required: true,
-    enum: ["new", "used"],
+    enum: ["New", "Used"],
   },
   description: {
     type: String,
     required: true,
   },
-  image: {
+  images: {
     type: [String],
     required: true,
   },
   seller: {
     type: mongoose.Schema.Types.ObjectId,
     ref: User,
-    required: true,
   },
   stock: {
     type: Number,
@@ -48,13 +50,14 @@ const bookSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    required: true,
     enum: ["latest", "trending", "popular", "best-seller", "sold-out"],
   },
   isListed: {
     type: Boolean,
-    required: true,
+    default: true,
   },
 });
 
-module.exports = mongoose.model("Book", bookSchema);
+const Book = mongoose.model("Book", bookSchema);
+
+export default Book;

@@ -1,8 +1,10 @@
 // controllers/book.controller.js
 import express from "express";
 import { errorHandler } from "../utils/error.js";
-import { Book } from "../models/Book.js";
-import { Category } from "../models/Category.js";
+import Book from "../models/books.model.js";
+import jwt from "jsonwebtoken";
+
+// import  Category  from "../models/category.model.js";
 
 export const addBook = async (req, res, next) => {
   const {
@@ -12,8 +14,9 @@ export const addBook = async (req, res, next) => {
     category,
     price,
     description,
-    image,
-    status,
+    images, // assuming images is an array of image URLs or objects
+    stock,
+    condition,
   } = req.body;
 
   if (
@@ -23,27 +26,33 @@ export const addBook = async (req, res, next) => {
     !category ||
     !price ||
     !description ||
-    !image ||
-    !status
+    !images ||
+    !stock ||
+    !condition
   ) {
     return next(errorHandler(400, "All fields are required"));
   }
-
-  const categoryObj = await Category.findOne({ category });
-
-  if (!categoryObj) {
-    return next(errorHandler(404, "Category not found"));
-  }
-
+  const userId = jwt.verify(
+    req.token,
+    process.env.SECRET_KEY,
+    (err, decoded) => {
+      if (err) {
+        return null; // or throw an error
+      }
+      return decoded.id; // assuming the user ID is stored in the token with key 'userId'
+    }
+  );
   const newBook = new Book({
     title,
     author,
     publisher,
-    category: categoryObj._id,
+    category,
     price,
+    stock,
+    condition,
     description,
-    image,
-    status,
+    images: [...images], // spread the images array into the Book model
+    seller: req.user.id, // insert the current user's ID into the seller field
   });
 
   try {

@@ -5,6 +5,7 @@ import cors from "cors";
 import morgan from "morgan";
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
+import bookRoutes from "./routes/books.route.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -30,6 +31,7 @@ mongoose
 //Routes
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/book", bookRoutes)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
