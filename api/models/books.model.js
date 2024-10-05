@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-import Category from "./Category";
+import Category from "./category.model";
 import User from "./User";
 
 const bookSchema = new mongoose.Schema({
