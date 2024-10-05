@@ -2,10 +2,10 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
-import mmorgan from "morgan";
 import morgan from "morgan";
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -13,6 +13,7 @@ const app = express();
 
 //middlewares
 app.use(express.json()); //Parse JSON payloads in incoming requests
+app.use(cookieParser());
 app.use(
   cors({
     origin: "http://localhost:5173",
