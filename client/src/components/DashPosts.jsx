@@ -161,7 +161,7 @@ export default function Dashbooks() {
                   <Table.Cell>
                     <Link
                       className="text-teal-500 hover:underline"
-                      to={`/update-post/${book._id}`}
+                      to={`/update-book/${book._id}`}
                     >
                       <span>Edit</span>
                     </Link>

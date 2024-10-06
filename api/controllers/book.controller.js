@@ -69,7 +69,8 @@ export const getBooks = async (req, res, next) => {
       ...(req.query.category && { category: req.query.category }),
       ...(req.query.slug && { slug: req.query.slug }),
       ...(req.query.bookId && { _id: req.query.bookId }),
-      ...(req.query.searchTerm && {title: { $regex: req.query.searchTerm, $options: "i" },
+      ...(req.query.searchTerm && {
+        title: { $regex: req.query.searchTerm, $options: "i" },
       }),
     })
       .sort({ updatedAt: sortDirection })
@@ -100,7 +101,6 @@ export const getBooks = async (req, res, next) => {
   }
 };
 
-
 export const deleteBook = async (req, res, next) => {
   const bookId = req.params.bookId;
   const userId = req.user.id;
@@ -126,5 +126,33 @@ export const deleteBook = async (req, res, next) => {
     }
   } else {
     return next(errorHandler(403, "You are not allowed to delete this book"));
+  }
+};
+
+export const updateBook = async (req, res, next) => {
+  if (!req.user.isAdmin || req.user.id !== req.params.userId) {
+    return next(errorHandler(403, "You are not allowed to update this post"));
+  }
+  try {
+    const updatedBook = await Book.findByIdAndUpdate(
+      req.params.bookId,
+      {
+        $set: {
+          title: req.body.title,
+          author: req.body.author,
+          publisher: req.body.publisher,
+          price: req.body.price,
+          description: req.body.description,
+          Condition: req.body.condition,
+          category: req.body.category,
+          images: req.body.images,
+          stock: req.body.stock,
+        },
+      },
+      { new: true }
+    );
+    res.status(200).json(updatedBook);
+  } catch (error) {
+    next(error);
   }
 };

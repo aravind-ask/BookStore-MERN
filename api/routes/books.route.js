@@ -1,7 +1,7 @@
 // routes/books.route.js
 import express from "express";
 import multer from "multer";
-import { addBook, deleteBook, getBooks } from "../controllers/book.controller.js";
+import { addBook, deleteBook, getBooks, updateBook } from "../controllers/book.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 
 const router = express.Router();
@@ -20,5 +20,7 @@ router.post(
 );
 router.get('/getbooks', getBooks)
 router.delete('/deletebook/:bookId/:userId',verifyToken, deleteBook)
+router.put('/update-book/:bookId/:userId',verifyToken, updateBook)
+
 
 export default router;

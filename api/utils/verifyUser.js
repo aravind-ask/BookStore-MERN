@@ -10,8 +10,8 @@ export const verifyToken = (req, res, next) => {
       return next(errorHandler(401, "Unauthorized"));
     }
     req.user = user;
-    console.log(request.user.id)
-    console.log(request.user.isAdmin)
+    console.log(req.user.id)
+    console.log(req.user.isAdmin)
     
     // if (req.user.role !== "admin" && req.path.startsWith("/admin")) {
     //   // return res.status(403).json({ msg: "Access denied" });

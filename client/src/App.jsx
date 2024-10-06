@@ -9,6 +9,7 @@ import About from "./pages/About";
 import Dashboard from "./pages/Dashboard";
 import PrivateRoute from "./components/PrivateRoute";
 import CreatePost from "./pages/CreatePost";
+import UpdateBook from "./pages/UpdateBook";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-post" element={<CreatePost />} />
+          <Route path="/update-book/:bookId" element={<UpdateBook />} />
         </Route>
       </Routes>
       <Footer />
