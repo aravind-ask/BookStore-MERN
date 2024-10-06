@@ -32,16 +32,11 @@ export const addBook = async (req, res, next) => {
   ) {
     return next(errorHandler(400, "All fields are required"));
   }
-  const userId = jwt.verify(
-    req.token,
-    process.env.SECRET_KEY,
-    (err, decoded) => {
-      if (err) {
-        return null; // or throw an error
-      }
-      return decoded.id; // assuming the user ID is stored in the token with key 'userId'
-    }
-  );
+  const slug = req.body.title
+    .split(" ")
+    .join("-")
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9-]/g, "");
   const newBook = new Book({
     title,
     author,
@@ -53,11 +48,53 @@ export const addBook = async (req, res, next) => {
     description,
     images: [...images], // spread the images array into the Book model
     seller: req.user.id, // insert the current user's ID into the seller field
+    slug,
   });
 
   try {
     await newBook.save();
-    res.status(200).json({ message: "Book added successfully" });
+    return next(errorHandler(200, "Book added successfully"));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getBooks = async (req, res, next) => {
+  try {
+    const startIndex = parseInt(req.query.startIndex) || 0;
+    const limit = parseInt(req.query.limit) || 9;
+    const sortDirection = req.query.order === "asc" ? 1 : -1;
+    const books = await Book.find({
+      ...(req.query.userId && { userId: req.query.userId }),
+      ...(req.query.category && { category: req.query.category }),
+      ...(req.query.slug && { slug: req.query.slug }),
+      ...(req.query.bookId && { _id: req.query.bookId }),
+      ...(req.query.searchTerm && {title: { $regex: req.query.searchTerm, $options: "i" },
+      }),
+    })
+      .sort({ updatedAt: sortDirection })
+      .skip(startIndex)
+      .limit(limit);
+
+    const totalBooks = await Book.countDocuments();
+
+    const now = new Date();
+
+    const oneMonthAgo = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      now.getDate()
+    );
+
+    const lastMonthBooks = await Book.countDocuments({
+      createdAt: { $gte: oneMonthAgo },
+    });
+
+    res.status(200).json({
+      books,
+      totalBooks,
+      lastMonthBooks,
+    });
   } catch (error) {
     next(error);
   }

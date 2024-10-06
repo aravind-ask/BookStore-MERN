@@ -19,53 +19,56 @@ export default function CreatePost() {
   const [imageUploadError, setImageUploadError] = useState(null);
   const [formData, setFormData] = useState({});
   const [publishError, setPublishError] = useState(null);
+  const [validationError, setValidationError] = useState(null);
+
+  const [uploadedImages, setUploadedImages] = useState([]); // new state to store uploaded images
 
   const navigate = useNavigate();
 
- const handleUploadImages = async () => {
-   try {
-     if (files.length === 0) {
-       setImageUploadError("Please select images");
-       return;
-     }
-     setImageUploadError(null);
-     const storage = getStorage(app);
-     const images = [];
-     for (let i = 0; i < files.length; i++) {
-       const file = files[i];
-       const fileName = new Date().getTime() + "-" + file.name;
-       const storageRef = ref(storage, fileName);
-       const uploadTask = uploadBytesResumable(storageRef, file);
-       uploadTask.on(
-         "state_changed",
-         (snapshot) => {
-           const progress =
-             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-           setImageUploadProgress(progress.toFixed(0));
-         },
-         (error) => {
-           setImageUploadError("Image upload failed");
-           setImageUploadProgress(null);
-         },
-         () => {
-           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-             images.push(downloadURL);
-             console.log(images);
-             if (images.length === files.length) {
-               setImageUploadProgress(null);
-               setImageUploadError(null);
-               setFormData({ ...formData, images });
-             }
-           });
-         }
-       );
-     }
-   } catch (error) {
-     setImageUploadError("Image upload failed");
-     setImageUploadProgress(null);
-     console.log(error);
-   }
- };
+  const handleUploadImages = async () => {
+    try {
+      if (files.length === 0) {
+        setImageUploadError("Please select images");
+        return;
+      }
+      setImageUploadError(null);
+      const storage = getStorage(app);
+      const images = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileName = new Date().getTime() + "-" + file.name;
+        const storageRef = ref(storage, fileName);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setImageUploadProgress(progress.toFixed(0));
+          },
+          (error) => {
+            setImageUploadError("Image upload failed");
+            setImageUploadProgress(null);
+          },
+          () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              images.push(downloadURL);
+              if (images.length === files.length) {
+                setImageUploadProgress(null);
+                setImageUploadError(null);
+                setFormData({ ...formData, images });
+                setUploadedImages(images); // update uploadedImages state
+              }
+            });
+          }
+        );
+      }
+    } catch (error) {
+      setImageUploadError("Image upload failed");
+      setImageUploadProgress(null);
+      console.log(error);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -154,13 +157,20 @@ export default function CreatePost() {
           </Button>
         </div>
         {imageUploadError && <Alert color="failure">{imageUploadError}</Alert>}
-        {formData.image && (
-          <img
-            src={formData.image}
-            alt="upload"
-            className="w-full h-72 object-cover"
-          />
-        )}
+        <div className="flex flex-col gap-4">
+          {uploadedImages.length > 0 && (
+            <div className="flex flex-wrap gap-4">
+              {uploadedImages.map((image, index) => (
+                <img
+                  key={index}
+                  src={image}
+                  alt="Uploaded Image"
+                  className="w-32 h-32 object-cover"
+                />
+              ))}
+            </div>
+          )}
+        </div>
         <div className="flex flex-col gap-4 sm:flex-row justify-between">
           <TextInput
             type="text"
@@ -195,6 +205,11 @@ export default function CreatePost() {
             <option value="academic">Worst</option>
           </Select>
         </div>
+        {validationError && (
+          <Alert className="mt-5" color="failure">
+            {validationError}
+          </Alert>
+        )}
         <div className="flex flex-col gap-4 sm:flex-row justify-between">
           <TextInput
             type="text"
@@ -202,9 +217,16 @@ export default function CreatePost() {
             required
             id="price"
             className="flex-1"
-            onChange={(e) =>
-              setFormData({ ...formData, price: e.target.value })
-            }
+            onChange={(e) => {
+              const value = e.target.value;
+              if (!/^\d+$/.test(value)) {
+                setValidationError("Please enter a valid number");
+                setFormData({ ...formData, price: "" });
+              } else {
+                setValidationError(null);
+                setFormData({ ...formData, price: value });
+              }
+            }}
           />
           <TextInput
             type="text"
@@ -212,9 +234,16 @@ export default function CreatePost() {
             required
             id="stock"
             className="flex-1"
-            onChange={(e) =>
-              setFormData({ ...formData, stock: e.target.value })
-            }
+            onChange={(e) => {
+              const value = e.target.value;
+              if (!/^\d+$/.test(value)) {
+                setValidationError("Please enter a valid number");
+                setFormData({ ...formData, stock: "" });
+              } else {
+                setValidationError(null);
+                setFormData({ ...formData, stock: value });
+              }
+            }}
           />
         </div>
         <ReactQuill

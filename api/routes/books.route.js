@@ -1,7 +1,7 @@
 // routes/books.route.js
 import express from "express";
 import multer from "multer";
-import { addBook } from "../controllers/book.controller.js";
+import { addBook, getBooks } from "../controllers/book.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 
 const router = express.Router();
@@ -18,5 +18,6 @@ router.post(
   verifyToken,
   addBook
 );
+router.get('/getbooks', getBooks)
 
 export default router;
