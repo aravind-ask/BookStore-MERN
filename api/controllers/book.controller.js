@@ -99,3 +99,32 @@ export const getBooks = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const deleteBook = async (req, res, next) => {
+  const bookId = req.params.bookId;
+  const userId = req.user.id;
+
+  if (req.user.isAdmin) {
+    // Admin can delete any book
+    try {
+      await Book.findByIdAndUpdate(bookId, { isDeleted: true });
+      res.status(200).json("The book has been deleted");
+    } catch (error) {
+      next(error);
+    }
+  } else if (userId === req.params.userId) {
+    // User can delete their own book
+    try {
+      await Book.findOneAndUpdate(
+        { _id: bookId, seller: userId },
+        { isDeleted: true }
+      );
+      res.status(200).json("The book has been deleted");
+    } catch (error) {
+      next(error);
+    }
+  } else {
+    return next(errorHandler(403, "You are not allowed to delete this book"));
+  }
+};

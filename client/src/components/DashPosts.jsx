@@ -1,17 +1,17 @@
-import { Modal, Table, Button } from 'flowbite-react';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
-import { HiOutlineExclamationCircle } from 'react-icons/hi';
-import { set } from 'mongoose';
+import { Modal, Table, Button } from "flowbite-react";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { HiOutlineExclamationCircle } from "react-icons/hi";
+import { set } from "mongoose";
 
 export default function Dashbooks() {
   const { currentUser } = useSelector((state) => state.user);
-  console.log(currentUser)
+  console.log(currentUser);
   const [userBooks, setUserBooks] = useState([]);
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [postIdToDelete, setPostIdToDelete] = useState('');
+  const [postIdToDelete, setPostIdToDelete] = useState("");
   useEffect(() => {
     const fetchBooks = async () => {
       try {
@@ -54,9 +54,9 @@ export default function Dashbooks() {
     setShowModal(false);
     try {
       const res = await fetch(
-        `/api/post/deletepost/${postIdToDelete}/${currentUser._id}`,
+        `/api/books/deletebook/${postIdToDelete}/${currentUser._id}`,
         {
-          method: 'DELETE',
+          method: "DELETE",
         }
       );
       const data = await res.json();
