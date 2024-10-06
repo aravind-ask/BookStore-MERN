@@ -85,7 +85,7 @@ export default function DashUsers() {
             value={searchQuery}
             onChange={handleSearch}
             placeholder="Search users"
-            className="w-full p-2 pl-10 text-sm text-gray-700"
+            className="w-full mb-4 p-2 pl-10 text-sm text-gray-700"
           />
           <Table hoverable className="shadow-md">
             <Table.Head>
