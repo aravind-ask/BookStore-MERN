@@ -72,7 +72,7 @@ export default function CreatePost() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/book/add-book", {
+      const res = await fetch("/api/books/add-book", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

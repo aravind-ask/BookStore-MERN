@@ -98,7 +98,7 @@ export default function Dashbooks() {
                     {new Date(book.updatedAt).toLocaleDateString()}
                   </Table.Cell>
                   <Table.Cell>
-                    <Link to={`/post/${book.slug}`}>
+                    <Link to={`/book/${book.slug}`}>
                       <img
                         src={book.images[0]}
                         alt={book.title}
@@ -109,7 +109,7 @@ export default function Dashbooks() {
                   <Table.Cell>
                     <Link
                       className="font-medium text-gray-900 dark:text-white"
-                      to={`/post/${book.slug}`}
+                      to={`/book/${book.slug}`}
                     >
                       {book.title}
                     </Link>
@@ -117,7 +117,7 @@ export default function Dashbooks() {
                   <Table.Cell>
                     <Link
                       className="font-medium text-gray-900 dark:text-white"
-                      to={`/post/${book.slug}`}
+                      to={`/book/${book.slug}`}
                     >
                       {book.author}
                     </Link>
@@ -125,7 +125,7 @@ export default function Dashbooks() {
                   <Table.Cell>
                     <Link
                       className="font-medium text-gray-900 dark:text-white"
-                      to={`/post/${book.slug}`}
+                      to={`/book/${book.slug}`}
                     >
                       {book.publisher}
                     </Link>
@@ -133,7 +133,7 @@ export default function Dashbooks() {
                   <Table.Cell>
                     <Link
                       className="font-medium text-gray-900 dark:text-white"
-                      to={`/post/${book.slug}`}
+                      to={`/book/${book.slug}`}
                     >
                       {book.price}
                     </Link>
@@ -142,7 +142,7 @@ export default function Dashbooks() {
                   <Table.Cell>
                     <Link
                       className="font-medium text-gray-900 dark:text-white"
-                      to={`/post/${book.slug}`}
+                      to={`/book/${book.slug}`}
                     >
                       {book.stock}
                     </Link>
