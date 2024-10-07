@@ -12,12 +12,12 @@ import { Link } from 'react-router-dom';
 export default function DashboardComp() {
   const [users, setUsers] = useState([]);
   const [comments, setComments] = useState([]);
-  const [posts, setPosts] = useState([]);
+  const [books, setBooks] = useState([]);
   const [totalUsers, setTotalUsers] = useState(0);
-  const [totalPosts, setTotalPosts] = useState(0);
+  const [totalBooks, setTotalBooks] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
   const [lastMonthUsers, setLastMonthUsers] = useState(0);
-  const [lastMonthPosts, setLastMonthPosts] = useState(0);
+  const [lastMonthBooks, setLastMonthBooks] = useState(0);
   const [lastMonthComments, setLastMonthComments] = useState(0);
   const { currentUser } = useSelector((state) => state.user);
   useEffect(() => {
@@ -34,14 +34,14 @@ export default function DashboardComp() {
         console.log(error.message);
       }
     };
-    const fetchPosts = async () => {
+    const fetchBooks = async () => {
       try {
-        const res = await fetch('/api/post/getposts?limit=5');
+        const res = await fetch('/api/books/getbooks?limit=5');
         const data = await res.json();
         if (res.ok) {
-          setPosts(data.posts);
-          setTotalPosts(data.totalPosts);
-          setLastMonthPosts(data.lastMonthPosts);
+          setBooks(data.books);
+          setTotalBooks(data.totalBooks);
+          setLastMonthBooks(data.lastMonthBooks);
         }
       } catch (error) {
         console.log(error.message);
@@ -62,7 +62,7 @@ export default function DashboardComp() {
     };
     if (currentUser.isAdmin) {
       fetchUsers();
-      fetchPosts();
+      fetchBooks();
       fetchComments();
     }
   }, [currentUser]);
@@ -89,7 +89,7 @@ export default function DashboardComp() {
           <div className='flex justify-between'>
             <div className=''>
               <h3 className='text-gray-500 text-md uppercase'>
-                Total Comments
+                Total Orders
               </h3>
               <p className='text-2xl'>{totalComments}</p>
             </div>
@@ -106,15 +106,15 @@ export default function DashboardComp() {
         <div className='flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md'>
           <div className='flex justify-between'>
             <div className=''>
-              <h3 className='text-gray-500 text-md uppercase'>Total Posts</h3>
-              <p className='text-2xl'>{totalPosts}</p>
+              <h3 className='text-gray-500 text-md uppercase'>Total Books</h3>
+              <p className='text-2xl'>{totalBooks}</p>
             </div>
             <HiDocumentText className='bg-lime-600  text-white rounded-full text-5xl p-3 shadow-lg' />
           </div>
           <div className='flex  gap-2 text-sm'>
             <span className='text-green-500 flex items-center'>
               <HiArrowNarrowUp />
-              {lastMonthPosts}
+              {lastMonthBooks}
             </span>
             <div className='text-gray-500'>Last month</div>
           </div>
@@ -152,15 +152,16 @@ export default function DashboardComp() {
         </div>
         <div className='flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800'>
           <div className='flex justify-between  p-3 text-sm font-semibold'>
-            <h1 className='text-center p-2'>Recent comments</h1>
+            <h1 className='text-center p-2'>Recent Orders</h1>
             <Button outline gradientDuoTone='purpleToPink'>
               <Link to={'/dashboard?tab=comments'}>See all</Link>
             </Button>
           </div>
           <Table hoverable>
             <Table.Head>
-              <Table.HeadCell>Comment content</Table.HeadCell>
-              <Table.HeadCell>Likes</Table.HeadCell>
+              <Table.HeadCell>Order</Table.HeadCell>
+              <Table.HeadCell>Date</Table.HeadCell>
+              <Table.HeadCell>Value</Table.HeadCell>
             </Table.Head>
             {comments &&
               comments.map((comment) => (
@@ -177,30 +178,34 @@ export default function DashboardComp() {
         </div>
         <div className='flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800'>
           <div className='flex justify-between  p-3 text-sm font-semibold'>
-            <h1 className='text-center p-2'>Recent posts</h1>
+            <h1 className='text-center p-2'>Recent books</h1>
             <Button outline gradientDuoTone='purpleToPink'>
-              <Link to={'/dashboard?tab=posts'}>See all</Link>
+              <Link to={'/dashboard?tab=books'}>See all</Link>
             </Button>
           </div>
           <Table hoverable>
             <Table.Head>
-              <Table.HeadCell>Post image</Table.HeadCell>
-              <Table.HeadCell>Post Title</Table.HeadCell>
+              <Table.HeadCell>image</Table.HeadCell>
+              <Table.HeadCell>Title</Table.HeadCell>
+              <Table.HeadCell>Price</Table.HeadCell>
+              <Table.HeadCell>Stock</Table.HeadCell>
               <Table.HeadCell>Category</Table.HeadCell>
             </Table.Head>
-            {posts &&
-              posts.map((post) => (
-                <Table.Body key={post._id} className='divide-y'>
+            {books &&
+              books.map((book) => (
+                <Table.Body key={book._id} className='divide-y'>
                   <Table.Row className='bg-white dark:border-gray-700 dark:bg-gray-800'>
                     <Table.Cell>
                       <img
-                        src={post.image}
+                        src={book.images}
                         alt='user'
                         className='w-14 h-10 rounded-md bg-gray-500'
                       />
                     </Table.Cell>
-                    <Table.Cell className='w-96'>{post.title}</Table.Cell>
-                    <Table.Cell className='w-5'>{post.category}</Table.Cell>
+                    <Table.Cell className='w-96'>{book.title}</Table.Cell>
+                    <Table.Cell className='w-5'>{book.price}</Table.Cell>
+                    <Table.Cell className='w-5'>{book.stock}</Table.Cell>
+                    <Table.Cell className='w-5'>{book.category}</Table.Cell>
                   </Table.Row>
                 </Table.Body>
               ))}

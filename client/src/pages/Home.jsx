@@ -1,86 +1,71 @@
-import React from 'react'
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import PostCard from "../components/BookCard";
+import BookCard from "../components/BookCard";
 
 export default function Home() {
+  const [books, setBooks] = useState([]);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      const res = await fetch("/api/books/getbooks");
+      const data = await res.json();
+      setBooks(data.books);
+    };
+    fetchBooks();
+  }, []);
   return (
     <div>
-      home
+      <div className="flex flex-col gap-6 p-28 px-3 max-w-6xl mx-auto ">
+        <h1 className="text-3xl font-bold lg:text-6xl">
+          Welcome to{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-green-500">
+            ReBook
+          </span>
+          <br />
+          <span className="text-xs sm:text-sm text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+            Connecting readers across the world.
+          </span>
+        </h1>
+
+        <p className="text-gray-500 text-xs sm:text-sm">
+          Here you'll find a variety of articles and tutorials on topics such as
+          web development, software engineering, and programming languages.
+        </p>
+        <div className="flex gap-6">
+          <Link
+            to="/search"
+            className="text-xs sm:text-sm text-teal-500 font-bold hover:underline"
+          >
+            View all books
+          </Link>
+          <Link
+            to="/create-post"
+            className="text-xs sm:text-sm text-teal-500 font-bold hover:underline"
+          >
+            List a Book
+          </Link>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto p-3 flex flex-col gap-8 py-7">
+        {books && books.length > 0 && (
+          <div className="flex flex-col gap-6">
+            <h2 className="text-2xl font-semibold text-center">Recent Books</h2>
+            <div className="flex flex-wrap gap-4">
+              {books.map((book) => (
+                <BookCard key={book._id} book={book} />
+              ))}
+            </div>
+            <Link
+              to={"/search"}
+              className="text-lg text-teal-500 hover:underline text-center"
+            >
+              View all books
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }
-
-
-// import React from "react";
-// import { Link } from "react-router-dom";
-// import {
-//   Avatar,
-//   Button,
-//   Card,
-//   Container,
-//   Flex,
-//   Grid,
-//   Image,
-//   Text,
-// } from "flowbite-react";
-// import { useState, useEffect } from "react";
-// import axios from "axios";
-
-// const Home = () => {
-//   const [books, setBooks] = useState([]);
-
-//   useEffect(() => {
-//     axios
-//       .get("/api/books")
-//       .then((response) => {
-//         setBooks(response.data);
-//       })
-//       .catch((error) => {
-//         console.error(error);
-//       });
-//   }, []);
-
-//   const latestBooks = books.filter((book) => book.status === "latest");
-//   const trendingBooks = books.filter((book) => book.status === "trending");
-
-//   return (
-//     <Container className="mx-auto p-4">
-//       <Flex className="justify-center items-center h-screen">
-//         <div className="w-full h-1/2 flex justify-center items-center">
-//           <h1 className="text-4xl font-bold text-center">Welcome to ReBook</h1>
-//           <Button gradientDuoTone="purpleToPink" className="mt-4">
-//             <Link to="/books">Buy Book</Link>
-//           </Button>
-//         </div>
-//         <div className="w-full h-1/2">
-//           <h2 className="text-2xl font-bold text-center">Latest Books</h2>
-//           <Grid className="grid-cols-3 gap-4">
-//             {latestBooks.map((book) => (
-//               <Link to={`/books/${book._id}`} key={book._id}>
-//                 <Card className="bg-white rounded-lg shadow-md">
-//                   <Image src={book.image} alt={book.title} />
-//                   <Text className="text-lg">{book.title}</Text>
-//                   <Text className="text-sm">{book.author}</Text>
-//                 </Card>
-//               </Link>
-//             ))}
-//           </Grid>
-//         </div>
-//         <div className="w-full h-1/2">
-//           <h2 className="text-2xl font-bold text-center">Trending Books</h2>
-//           <Grid className="grid-cols-3 gap-4">
-//             {trendingBooks.map((book) => (
-//               <Link to={`/books/${book._id}`} key={book._id}>
-//                 <Card className="bg-white rounded-lg shadow-md">
-//                   <Image src={book.image} alt={book.title} />
-//                   <Text className="text-lg">{book.title}</Text>
-//                   <Text className="text-sm">{book.author}</Text>
-//                 </Card>
-//               </Link>
-//             ))}
-//           </Grid>
-//         </div>
-//       </Flex>
-//     </Container>
-//   );
-// };
-
-// export default Home;

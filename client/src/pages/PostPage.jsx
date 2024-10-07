@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import CommentSection from "../components/CommentSection";
+import BookCard from "../components/BookCard";
 
 export default function PostPage() {
   const { bookSlug } = useParams();
@@ -32,24 +33,20 @@ export default function PostPage() {
 
         const authorRelatedBooks = await authorRelatedBooksResponse.json();
         const categoryRelatedBooks = await categoryRelatedBooksResponse.json();
+        console.log(authorRelatedBooks);
+        console.log(categoryRelatedBooks);
+        let filteredBooks = [
+          ...authorRelatedBooks.books,
+          ...categoryRelatedBooks.books,
+        ].filter((fbook) => fbook._id !== book._id);
 
-        let relatedBooks = [];
-
-        if (Array.isArray(authorRelatedBooks)) {
-          relatedBooks = [...relatedBooks, ...authorRelatedBooks];
-        } else if (authorRelatedBooks) {
-          relatedBooks.push(authorRelatedBooks);
-        }
-
-        if (Array.isArray(categoryRelatedBooks)) {
-          relatedBooks = [...relatedBooks, ...categoryRelatedBooks];
-        } else if (categoryRelatedBooks) {
-          relatedBooks.push(categoryRelatedBooks);
-        }
-
-        setRelatedBooks(
-          relatedBooks.filter((relatedBook) => relatedBook._id !== book._id)
+        // Remove duplicates
+        filteredBooks = filteredBooks.filter(
+          (book, index, self) =>
+            index === self.findIndex((b) => b._id === book._id)
         );
+        console.log(filteredBooks);
+        setRelatedBooks(filteredBooks.slice(0, 5));
       } catch (error) {
         console.error(error);
       }
@@ -81,7 +78,6 @@ export default function PostPage() {
           setloading(false);
           setBook(data.books[0]);
           setError(null);
-          console.log(data.books[0]);
         }
       } catch (error) {
         setloading(false);
@@ -207,27 +203,7 @@ export default function PostPage() {
         <h2 className="text-xl font-bold mb-4">Related Books</h2>
         <div className="grid grid-cols-5 gap-4">
           {relatedBooks.map((book) => (
-            <div key={book._id} className="bg-white p-4 rounded-lg shadow-lg">
-              <img
-                key={book._id}
-                src={book.image}
-                alt={book.title}
-                className="w-full h-auto rounded-lg mb-4"
-              />
-              <h3 key={book._id} className="text-lg font-bold mb-2">
-                {book.title}
-              </h3>
-              <p key={book._id} className="text-gray-600 mb-2">
-                {book.price
-                  ? `₹${book.price.toFixed(2)}`
-                  : "Price not available"}
-              </p>
-              <div key={book._id} className="text-yellow-500">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <span key={book._id}>{star <= book.rating ? "★" : "☆"}</span>
-                ))}
-              </div>
-            </div>
+            <BookCard key={book._id} book={book} />
           ))}
         </div>
       </div>
