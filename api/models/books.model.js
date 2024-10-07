@@ -43,7 +43,7 @@ const bookSchema = new mongoose.Schema(
     },
     seller: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: User,
+      ref: "User",
     },
     stock: {
       type: Number,

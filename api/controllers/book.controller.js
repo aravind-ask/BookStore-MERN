@@ -67,6 +67,10 @@ export const getBooks = async (req, res, next) => {
     const books = await Book.find({
       ...(req.query.userId && { userId: req.query.userId }),
       ...(req.query.category && { category: req.query.category }),
+      ...(req.query.condition && { Condition: req.query.condition }),
+      ...(req.query.seller && { seller: req.query.seller }),
+      ...(req.query.title && { title: req.query.title }),
+      ...(req.query.author && { author: req.query.author }),
       ...(req.query.slug && { slug: req.query.slug }),
       ...(req.query.bookId && { _id: req.query.bookId }),
       ...(req.query.searchTerm && {

@@ -5,25 +5,66 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
-
+import CommentSection from "../components/CommentSection";
 
 export default function PostPage() {
   const { bookSlug } = useParams();
   const [loading, setloading] = useState(true);
   const [book, setBook] = useState(null);
   const [error, setError] = useState(null);
-   const [lightbox, setLightbox] = useState({
-     images: [],
-     isOpen: false,
-   });
+  const [lightbox, setLightbox] = useState({
+    images: [],
+    isOpen: false,
+  });
 
-   const handleImageClick = (index) => {
-     setLightbox({
-       images: book.images,
-       isOpen: true,
-       startIndex: index,
-     });
-   };
+  const [relatedBooks, setRelatedBooks] = useState([]);
+  useEffect(() => {
+    const fetchRelatedBooks = async () => {
+      if (!book) return;
+
+      try {
+        const authorRelatedBooksResponse = await fetch(
+          `/api/books/getbooks?author=${book.author}`
+        );
+        const categoryRelatedBooksResponse = await fetch(
+          `/api/books/getbooks?category=${book.category}`
+        );
+
+        const authorRelatedBooks = await authorRelatedBooksResponse.json();
+        const categoryRelatedBooks = await categoryRelatedBooksResponse.json();
+
+        let relatedBooks = [];
+
+        if (Array.isArray(authorRelatedBooks)) {
+          relatedBooks = [...relatedBooks, ...authorRelatedBooks];
+        } else if (authorRelatedBooks) {
+          relatedBooks.push(authorRelatedBooks);
+        }
+
+        if (Array.isArray(categoryRelatedBooks)) {
+          relatedBooks = [...relatedBooks, ...categoryRelatedBooks];
+        } else if (categoryRelatedBooks) {
+          relatedBooks.push(categoryRelatedBooks);
+        }
+
+        setRelatedBooks(
+          relatedBooks.filter((relatedBook) => relatedBook._id !== book._id)
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchRelatedBooks();
+  }, [book]);
+
+  const handleImageClick = (index) => {
+    setLightbox({
+      images: book.images,
+      isOpen: true,
+      startIndex: index,
+    });
+  };
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -64,7 +105,7 @@ export default function PostPage() {
   return (
     <main className="max-w-6xl mx-auto pt-5">
       <div className="bg-white p-8 rounded-lg shadow-lg flex flex-col md:flex-row">
-        <div className="max-w-md mx-auto p-8">
+        <div className="max-w-md mx-auto p-8 gap-4">
           <Carousel
             axis="horizontal"
             autoPlay={true}
@@ -151,6 +192,7 @@ export default function PostPage() {
           </div>
         </div>
       </div>
+      <CommentSection bookId={book._id} />
       <div className="mt-8">
         <div className="text-yellow-500">
           {book.rating
@@ -158,95 +200,35 @@ export default function PostPage() {
                 <i key={i} className="fas fa-star"></i>
               ))
             : null}
-          {book.rating % 1 !== 0 && <i className="fas fa-star-half-alt"></i>}
-        </div>
-        <div className="flex items-center mb-2">
-          <p className="text-gray-600 ml-2">Good Book. Interesting</p>
+          {/* {book.rating % 1 !== 0 && <i className="fas fa-star-half-alt"></i>} */}
         </div>
       </div>
       <div className="mt-8">
         <h2 className="text-xl font-bold mb-4">Related Books</h2>
         <div className="grid grid-cols-5 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            <img
-              src="https://placehold.co/150x200"
-              alt="Book cover"
-              className="w-full h-auto rounded-lg mb-4"
-            />
-            <h3 className="text-lg font-bold mb-2">Mens Fashion Wear</h3>
-            <p className="text-gray-600 mb-2">$41.00</p>
-            <div className="text-yellow-500">
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star-half-alt"></i>
+          {relatedBooks.map((book) => (
+            <div key={book._id} className="bg-white p-4 rounded-lg shadow-lg">
+              <img
+                key={book._id}
+                src={book.image}
+                alt={book.title}
+                className="w-full h-auto rounded-lg mb-4"
+              />
+              <h3 key={book._id} className="text-lg font-bold mb-2">
+                {book.title}
+              </h3>
+              <p key={book._id} className="text-gray-600 mb-2">
+                {book.price
+                  ? `₹${book.price.toFixed(2)}`
+                  : "Price not available"}
+              </p>
+              <div key={book._id} className="text-yellow-500">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span key={book._id}>{star <= book.rating ? "★" : "☆"}</span>
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            <img
-              src="https://placehold.co/150x200"
-              alt="Book cover"
-              className="w-full h-auto rounded-lg mb-4"
-            />
-            <h3 className="text-lg font-bold mb-2">Women's Fashion</h3>
-            <p className="text-gray-600 mb-2">$67.00</p>
-            <div className="text-yellow-500">
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star-half-alt"></i>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            <img
-              src="https://placehold.co/150x200"
-              alt="Book cover"
-              className="w-full h-auto rounded-lg mb-4"
-            />
-            <h3 className="text-lg font-bold mb-2">Web Dummy Fashion</h3>
-            <p className="text-gray-600 mb-2">$67.00</p>
-            <div className="text-yellow-500">
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star-half-alt"></i>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            <img
-              src="https://placehold.co/150x200"
-              alt="Book cover"
-              className="w-full h-auto rounded-lg mb-4"
-            />
-            <h3 className="text-lg font-bold mb-2">Beyond Heaven</h3>
-            <p className="text-gray-600 mb-2">$67.00</p>
-            <div className="text-yellow-500">
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star-half-alt"></i>
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-lg">
-            <img
-              src="https://placehold.co/150x200"
-              alt="Book cover"
-              className="w-full h-auto rounded-lg mb-4"
-            />
-            <h3 className="text-lg font-bold mb-2">Top Wall Digital Clock</h3>
-            <p className="text-gray-600 mb-2">$31.00</p>
-            <div className="text-yellow-500">
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star"></i>
-              <i className="fas fa-star-half-alt"></i>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </main>
