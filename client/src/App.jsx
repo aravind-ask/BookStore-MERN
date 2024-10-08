@@ -12,6 +12,8 @@ import CreatePost from "./pages/CreatePost";
 import UpdateBook from "./pages/UpdateBook";
 import PostPage from "./pages/PostPage";
 import ScrollToTop from "./components/ScrollToTop";
+import Search from "./pages/Search";
+import LoginProtected from "./components/LoginProtected";
 
 export default function App() {
   return (
@@ -21,8 +23,23 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
-        <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/sign-in" element={<SignIn />} />
+        <Route
+          path="/sign-in"
+          element={
+            <LoginProtected>
+              <SignIn />
+            </LoginProtected>
+          }
+        />
+        <Route
+          path="/sign-up"
+          element={
+            <LoginProtected>
+              <SignUp />
+            </LoginProtected>
+          }
+        />
+        <Route path="/search" element={<Search />} />
         <Route path="/book/:bookSlug" element={<PostPage />} />
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />

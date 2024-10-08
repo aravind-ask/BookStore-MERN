@@ -86,6 +86,25 @@ export default function PostPage() {
     };
     fetchBook();
   }, [bookSlug]);
+
+  const [listedBy, setListedBy] = useState(null);
+
+  useEffect(() => {
+    const fetchListedBy = async () => {
+      if (book) {
+        try {
+          const res = await fetch(`/api/user/${book.seller}`);
+          const data = await res.json();
+          setListedBy(data);
+          console.log(data);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    };
+    fetchListedBy();
+  }, [book]);
+
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -100,8 +119,8 @@ export default function PostPage() {
   }
   return (
     <main className="max-w-6xl mx-auto pt-5">
-      <div className="bg-white p-8 rounded-lg shadow-lg flex flex-col md:flex-row">
-        <div className="max-w-md mx-auto p-8 gap-4">
+      <div className=" p-8 rounded-lg shadow-lg flex flex-col md:flex-row dark:bg-gray-800">
+        <div className="max-w-md mx-auto p-8">
           <Carousel
             axis="horizontal"
             autoPlay={true}
@@ -118,11 +137,11 @@ export default function PostPage() {
             width="100%"
           >
             {book.images.map((image, index) => (
-              <div key={index} className="inline-block w-full h-96">
+              <div key={index} className="inline-block w-80 h-80">
                 <img
                   src={image}
                   alt={`Slide ${index + 1}`}
-                  className="object-cover w-full h-full rounded-lg"
+                  className="object-contain w-full h-full rounded-lg"
                   onClick={() => handleImageClick(index)}
                 />
               </div>
@@ -142,8 +161,10 @@ export default function PostPage() {
           )}
         </div>
         <div className="mt-10 md:mt-0 md:ml-8 flex-grow">
-          <h1 className="text-3xl font-bold mb-2">{book.title}</h1>
-          <p className="text-gray-600 mb-2">{book.author}</p>
+          <h1 className="text-3xl font-bold mb-2 dark:text-gray-100">
+            {book.title}
+          </h1>
+          <p className="text-gray-600 dark:text-gray-100 mb-2">{book.author}</p>
 
           <div className="text-2xl font-bold text-red-500 mb-2">
             {book.price ? `₹${book.price.toFixed(2)}` : "Price not available"}{" "}
@@ -151,21 +172,24 @@ export default function PostPage() {
               ${book.originalPrice.toFixed(2)}
             </span> */}
           </div>
-          <p className="text-gray-600 mb-2">
-            Listed By: <span className="font-bold">{book.seller}</span>
+          <p className="text-gray-600 mb-2 dark:text-gray-100">
+            Listed By:{" "}
+            <span className="font-bold">{listedBy && listedBy.username}</span>
           </p>
-          <p className="text-gray-600 mb-2">
+          <p className="text-gray-600 mb-2 dark:text-gray-100">
             Categories: <span className="font-bold">{book.category}</span>
           </p>
-          <p className="text-gray-600 mb-2">
+          <p className="text-gray-600 mb-2 dark:text-gray-100">
             Publisher: <span className="font-bold">{book.publisher}</span>
           </p>
-          <h2 className="text-xl font-bold mb-2">Description</h2>
+          <h2 className="text-xl font-bold mb-2 dark:text-gray-100">
+            Description
+          </h2>
           <div
-            className="text-gray-600 mb-4"
+            className="text-gray-600 mb-4 dark:text-gray-100"
             dangerouslySetInnerHTML={{ __html: book && book.description }}
           ></div>
-          <p className="text-gray-600 mb-2">
+          <p className="text-gray-600 mb-2 dark:text-gray-100">
             Condition: <span className="font-bold">{book.condition}</span>
           </p>
 
@@ -177,11 +201,11 @@ export default function PostPage() {
               Add To Cart
             </Button>
             <Button className="bg-white border border-gray-300 text-gray-600 px-6 py-2 rounded-full">
-              <i className="fas fa-heart text-lg"></i>
+              <i className="fas fa-heart text-lg dark:text-gray-100"></i>
             </Button>
           </div>
-          <div className="flex items-center mt-4 mb-4">
-            <p className="text-gray-600 mr-2">Share:</p>
+          <div className="flex items-center mt-4 mb-4 dark:text-gray-100">
+            <p className="text-gray-600 mr-2 dark:text-gray-100">Share:</p>
             <i className="fab fa-facebook text-blue-600 mr-2"></i>
             <i className="fab fa-twitter text-blue-400 mr-2"></i>
             <i className="fab fa-instagram text-pink-600"></i>

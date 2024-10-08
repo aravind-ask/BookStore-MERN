@@ -17,9 +17,12 @@ export default function SignIn() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
   };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password) {
+
+  const handleSubmit = async (e, isDemo = false, demoData = null) => {
+    if (e) {
+      e.preventDefault();
+    }
+    if (!isDemo && (!formData.email || !formData.password)) {
       return dispatch(signInFailure("Please fill all the fields"));
     }
     try {
@@ -27,7 +30,7 @@ export default function SignIn() {
       const res = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(isDemo ? demoData : formData),
       });
       const data = await res.json();
       if (data.success === false) {
@@ -41,6 +44,20 @@ export default function SignIn() {
     } catch (error) {
       dispatch(signInFailure(error.message));
     }
+  };
+
+  const handleDemoLogin = () => {
+    handleSubmit(null, true, {
+      email: "sample@gmail.com",
+      password: "123456",
+    });
+  };
+
+  const handleAdminLogin = () => {
+    handleSubmit(null, true, {
+      email: "admin@gmail.com",
+      password: "123456",
+    });
   };
   return (
     <div className="min-h-screen mt-20">
@@ -106,6 +123,14 @@ export default function SignIn() {
               {errorMessage}
             </Alert>
           )}
+          <div className="flex gap-2 mt-5">
+            <Button onClick={handleDemoLogin} gradientDuoTone="greenToBlue">
+              Demo Login
+            </Button>
+            <Button onClick={handleAdminLogin} gradientDuoTone="redToYellow">
+              Admin Login
+            </Button>
+          </div>
         </div>
       </div>
     </div>

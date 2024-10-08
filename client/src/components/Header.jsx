@@ -1,8 +1,8 @@
 import { Avatar, Button, Dropdown, Navbar, TextInput } from "flowbite-react";
-import React from "react";
+import React, { useEffect } from "react";
 import { AiOutlineSearch } from "react-icons/ai";
 import { FaMoon, FaSun } from "react-icons/fa";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { signoutSuccess } from "../redux/user/userSlice";
 import { toggleTheme } from "../redux/theme/themeSlice";
@@ -12,6 +12,25 @@ export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const { theme } = useSelector((state) => state.theme);
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const searchFromUrl = urlParams.get("searchTerm");
+    if (searchFromUrl) {
+      setSearchTerm(searchFromUrl);
+    }
+  }, [location.search]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const urlParams = new URLSearchParams(location.search);
+    urlParams.set("searchTerm", searchTerm);
+    const searchQuery = urlParams.toString();
+    navigate(`/search?${searchQuery}`);
+  };
 
   const handleSignout = async () => {
     try {
@@ -38,14 +57,14 @@ export default function Header() {
           ReBook
         </span>
       </Link>
-      <form>
+      <form onSubmit={handleSubmit}>
         <TextInput
           type="text"
           placeholder="Search..."
           // rightIcon={AiOutlineSearch}
           className="hidden lg:inline"
-          // value={searchTerm}
-          // onChange={(e) => setSearchTerm(e.target.value)}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </form>
       <Button className="w-12 h-10 lg:hidden" color="gray" pill>
@@ -95,7 +114,7 @@ export default function Header() {
           <Link to="/">Home</Link>
         </Navbar.Link>
         <Navbar.Link active={path === "/books"} as={"div"}>
-          <Link to="/about">Buy Books</Link>
+          <Link to="/search">Buy Books</Link>
         </Navbar.Link>
         <Navbar.Link active={path === "/add-book"} as={"div"}>
           <Link to="/create-post">Sell Books</Link>

@@ -44,7 +44,7 @@ export const addBook = async (req, res, next) => {
     category,
     price,
     stock,
-    condition,
+    Condition: condition,
     description,
     images: [...images], // spread the images array into the Book model
     seller: req.user.id, // insert the current user's ID into the seller field
@@ -64,19 +64,41 @@ export const getBooks = async (req, res, next) => {
     const startIndex = parseInt(req.query.startIndex) || 0;
     const limit = parseInt(req.query.limit) || 9;
     const sortDirection = req.query.order === "asc" ? 1 : -1;
-    const books = await Book.find({
-      ...(req.query.userId && { userId: req.query.userId }),
-      ...(req.query.category && { category: req.query.category }),
-      ...(req.query.condition && { Condition: req.query.condition }),
-      ...(req.query.seller && { seller: req.query.seller }),
-      ...(req.query.title && { title: req.query.title }),
-      ...(req.query.author && { author: req.query.author }),
-      ...(req.query.slug && { slug: req.query.slug }),
-      ...(req.query.bookId && { _id: req.query.bookId }),
-      ...(req.query.searchTerm && {
-        title: { $regex: req.query.searchTerm, $options: "i" },
-      }),
-    })
+    let filter = {};
+
+    if (req.query.isAdmin === "true") {
+      // Admins can see all books, including deleted ones
+      filter = {
+        ...(req.query.userId && { userId: req.query.userId }),
+        ...(req.query.category && { category: req.query.category }),
+        ...(req.query.condition && { Condition: req.query.condition }),
+        ...(req.query.seller && { seller: req.query.seller }),
+        ...(req.query.title && { title: req.query.title }),
+        ...(req.query.author && { author: req.query.author }),
+        ...(req.query.slug && { slug: req.query.slug }),
+        ...(req.query.bookId && { _id: req.query.bookId }),
+        ...(req.query.searchTerm && {
+          title: { $regex: req.query.searchTerm, $options: "i" },
+        }),
+      };
+    } else {
+      // Regular users can only see non-deleted books
+      filter = {
+        ...(req.query.userId && { userId: req.query.userId }),
+        ...(req.query.category && { category: req.query.category }),
+        ...(req.query.condition && { Condition: req.query.condition }),
+        ...(req.query.seller && { seller: req.query.seller }),
+        ...(req.query.title && { title: req.query.title }),
+        ...(req.query.author && { author: req.query.author }),
+        ...(req.query.slug && { slug: req.query.slug }),
+        ...(req.query.bookId && { _id: req.query.bookId }),
+        ...(req.query.searchTerm && {
+          title: { $regex: req.query.searchTerm, $options: "i" },
+        }),
+        isListed: true, // Only show non-deleted books for regular users
+      };
+    }
+    const books = await Book.find(filter)
       .sort({ updatedAt: sortDirection })
       .skip(startIndex)
       .limit(limit);
@@ -158,5 +180,42 @@ export const updateBook = async (req, res, next) => {
     res.status(200).json(updatedBook);
   } catch (error) {
     next(error);
+  }
+};
+
+export const listBook = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const book = await Book.findById(bookId);
+
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    book.isListed = true;
+    await book.save();
+
+    res.status(200).json({ message: "Book listed successfully", book });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Unlist a book
+export const unlistBook = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const book = await Book.findById(bookId);
+
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    book.isListed = false;
+    await book.save();
+
+    res.status(200).json({ message: "Book unlisted successfully", book });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

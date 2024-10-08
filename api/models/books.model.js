@@ -31,7 +31,7 @@ const bookSchema = new mongoose.Schema(
     },
     Condition: {
       type: String,
-      enum: ["New", "Used"],
+      required: true,
     },
     description: {
       type: String,
@@ -40,6 +40,10 @@ const bookSchema = new mongoose.Schema(
     images: {
       type: [String],
       required: true,
+      default: [
+        "https://firebasestorage.googleapis.com/v0/b/rebook-mern.appspot.com/o/1728369326265-sample-sd.jpg?alt=media&token=37523efe-507b-484e-9a80-75e14dee9ada",
+        "https://firebasestorage.googleapis.com/v0/b/rebook-mern.appspot.com/o/1728369326265-sample-sd.jpg?alt=media&token=37523efe-507b-484e-9a80-75e14dee9ada",
+      ],
     },
     seller: {
       type: mongoose.Schema.Types.ObjectId,

@@ -12,10 +12,12 @@ export default function Dashbooks() {
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [postIdToDelete, setPostIdToDelete] = useState("");
+  const [bookToListUnlist, setBookToListUnlist] = useState(null);
+
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const res = await fetch(`/api/books/getbooks`);
+        const res = await fetch(`/api/books/getbooks?isAdmin=true`);
         const data = await res.json();
         if (res.ok) {
           setUserBooks(data.books);
@@ -36,7 +38,7 @@ export default function Dashbooks() {
     const startIndex = userBooks.length;
     try {
       const res = await fetch(
-        `/api/post/getbooks?userId=${currentUser._id}&startIndex=${startIndex}`
+        `/api/post/getbooks?isAdmin=true&userId=${currentUser._id}&startIndex=${startIndex}`
       );
       const data = await res.json();
       if (res.ok) {
@@ -50,13 +52,15 @@ export default function Dashbooks() {
     }
   };
 
-  const handleDeletePost = async () => {
+  const handleListUnlistPost = async (book) => {
     setShowModal(false);
     try {
       const res = await fetch(
-        `/api/books/deletebook/${postIdToDelete}/${currentUser._id}`,
+        `/api/books/${
+          book.isListed ? "unlist" : "list"
+        }book/${postIdToDelete}/${currentUser._id}`,
         {
-          method: "DELETE",
+          method: "PATCH",
         }
       );
       const data = await res.json();
@@ -64,7 +68,9 @@ export default function Dashbooks() {
         console.log(data.message);
       } else {
         setUserBooks((prev) =>
-          prev.filter((post) => post._id !== postIdToDelete)
+          prev.map((post) =>
+            post._id === book._id ? { ...post, isListed: !post.isListed } : post
+          )
         );
       }
     } catch (error) {
@@ -86,7 +92,7 @@ export default function Dashbooks() {
               <Table.HeadCell>Price</Table.HeadCell>
               <Table.HeadCell>Category</Table.HeadCell>
               <Table.HeadCell>Stock</Table.HeadCell>
-              <Table.HeadCell>Delete</Table.HeadCell>
+              <Table.HeadCell>Status</Table.HeadCell>
               <Table.HeadCell>
                 <span>Edit</span>
               </Table.HeadCell>
@@ -152,10 +158,13 @@ export default function Dashbooks() {
                       onClick={() => {
                         setShowModal(true);
                         setPostIdToDelete(book._id);
+                        setBookToListUnlist(book);
                       }}
-                      className="font-medium text-red-500 hover:underline cursor-pointer"
+                      className={`font-medium ${
+                        book.isListed ? "text-green-500" : "text-red-500"
+                      } hover:underline cursor-pointer`}
                     >
-                      Delete
+                      {book.isListed ? "Listed" : "UnListed"}
                     </span>
                   </Table.Cell>
                   <Table.Cell>
@@ -193,10 +202,14 @@ export default function Dashbooks() {
           <div className="text-center">
             <HiOutlineExclamationCircle className="h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto" />
             <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
-              Are you sure you want to delete this post?
+              Are you sure you want to{" "}
+              {bookToListUnlist?.isListed ? "unlist" : "list"} this book?
             </h3>
             <div className="flex justify-center gap-4">
-              <Button color="failure" onClick={handleDeletePost}>
+              <Button
+                color="failure"
+                onClick={() => handleListUnlistPost(bookToListUnlist)}
+              >
                 Yes, I'm sure
               </Button>
               <Button color="gray" onClick={() => setShowModal(false)}>
