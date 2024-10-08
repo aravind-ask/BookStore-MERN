@@ -76,7 +76,7 @@ export default function Search() {
     urlParams.set("sort", sidebarData.sort);
     urlParams.set("category", sidebarData.category);
     const searchQuery = urlParams.toString();
-    navigate(`/search?${searchQuery}`);
+    navigate(`/books?${searchQuery}`);
   };
 
   const handleShowMore = async () => {

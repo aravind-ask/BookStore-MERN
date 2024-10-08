@@ -2,7 +2,7 @@ import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Button, Spinner } from "flowbite-react";
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import CommentSection from "../components/CommentSection";
@@ -119,6 +119,35 @@ export default function PostPage() {
   }
   return (
     <main className="max-w-6xl mx-auto pt-5">
+      <nav className="flex mt-8 mb-8">
+        <ol className="breadcrumb flex items-center text-sm gap-5">
+          <li className="breadcrumb-item">
+            <Link
+              to="/"
+              className="text-gray-600 hover:text-gray-900 transition duration-300 ease-in-out"
+            >
+              <i className="fas fa-home mr-1"></i> Home
+            </Link>
+          </li>
+          <li className="breadcrumb-item">
+            <span className="text-gray-600">/</span>
+          </li>
+          <li className="breadcrumb-item">
+            <Link
+              to="/books"
+              className="text-gray-600 hover:text-gray-900 transition duration-300 ease-in-out"
+            >
+              <i className="fas fa-book mr-1"></i> Books
+            </Link>
+          </li>
+          <li className="breadcrumb-item">
+            <span className="text-gray-600">/</span>
+          </li>
+          <li className="breadcrumb-item active" aria-current="page">
+            <span className="text-gray-900 font-bold">{book.title}</span>
+          </li>
+        </ol>
+      </nav>
       <div className=" p-8 rounded-lg shadow-lg flex flex-col md:flex-row dark:bg-gray-800">
         <div className="max-w-md mx-auto p-8">
           <Carousel

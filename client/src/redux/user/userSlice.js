@@ -4,10 +4,11 @@ const initialState = {
   currentUser: null,
   error: null,
   loading: false,
+  isBlocked: false,
 };
 
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState,
   reducers: {
     signInStart: (state) => {
@@ -53,6 +54,9 @@ const userSlice = createSlice({
       state.currentUser = null;
       state.error = null;
       state.loading = false;
+    },
+    setUserBlocked: (state) => {
+      state.isBlocked = true;
     },
   },
 });

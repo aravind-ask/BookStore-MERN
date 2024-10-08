@@ -29,7 +29,7 @@ export default function Header() {
     const urlParams = new URLSearchParams(location.search);
     urlParams.set("searchTerm", searchTerm);
     const searchQuery = urlParams.toString();
-    navigate(`/search?${searchQuery}`);
+    navigate(`/books?${searchQuery}`);
   };
 
   const handleSignout = async () => {
@@ -114,7 +114,7 @@ export default function Header() {
           <Link to="/">Home</Link>
         </Navbar.Link>
         <Navbar.Link active={path === "/books"} as={"div"}>
-          <Link to="/search">Buy Books</Link>
+          <Link to="/books">Buy Books</Link>
         </Navbar.Link>
         <Navbar.Link active={path === "/add-book"} as={"div"}>
           <Link to="/create-post">Sell Books</Link>

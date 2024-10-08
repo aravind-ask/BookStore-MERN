@@ -39,7 +39,7 @@ export default function App() {
             </LoginProtected>
           }
         />
-        <Route path="/search" element={<Search />} />
+        <Route path="/books" element={<Search />} />
         <Route path="/book/:bookSlug" element={<PostPage />} />
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />

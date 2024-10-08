@@ -2,14 +2,15 @@ import { Modal, Table, Button } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
-import { FaCheck, FaTimes } from "react-icons/fa";
+import { FaCheck, FaTimes, FaUnlock, FaLock } from "react-icons/fa";
 
 export default function DashUsers() {
   const { currentUser } = useSelector((state) => state.user);
   const [users, setUsers] = useState([]);
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [userIdToDelete, setUserIdToDelete] = useState("");
+  const [userIdToUpdate, setUserIdToUpdate] = useState("");
+  const [updateAction, setUpdateAction] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
   useEffect(() => {
@@ -59,14 +60,38 @@ export default function DashUsers() {
     }
   };
 
-  const handleDeleteUser = async () => {
+  // const handleDeleteUser = async () => {
+  //   try {
+  //     const res = await fetch(`/api/user/delete/${userIdToDelete}`, {
+  //       method: "DELETE",
+  //     });
+  //     const data = await res.json();
+  //     if (res.ok) {
+  //       setUsers((prev) => prev.filter((user) => user._id !== userIdToDelete));
+  //       setShowModal(false);
+  //     } else {
+  //       console.log(data.message);
+  //     }
+  //   } catch (error) {
+  //     console.log(error.message);
+  //   }
+  // };
+
+  const handleUpdateUser = async () => {
     try {
-      const res = await fetch(`/api/user/delete/${userIdToDelete}`, {
-        method: "DELETE",
+      const res = await fetch(`/api/user/${updateAction}/${userIdToUpdate}`, {
+        method: "PATCH",
       });
       const data = await res.json();
       if (res.ok) {
-        setUsers((prev) => prev.filter((user) => user._id !== userIdToDelete));
+        setUsers((prev) =>
+          prev.map((user) => {
+            if (user._id === userIdToUpdate) {
+              user.isBlocked = updateAction === "block";
+            }
+            return user;
+          })
+        );
         setShowModal(false);
       } else {
         console.log(data.message);
@@ -94,7 +119,7 @@ export default function DashUsers() {
               <Table.HeadCell>Username</Table.HeadCell>
               <Table.HeadCell>Email</Table.HeadCell>
               <Table.HeadCell>Admin</Table.HeadCell>
-              <Table.HeadCell>Delete</Table.HeadCell>
+              <Table.HeadCell>Bock/Unblock</Table.HeadCell>
             </Table.Head>
             {filteredUsers.length > 0
               ? filteredUsers.map((user) => (
@@ -120,15 +145,29 @@ export default function DashUsers() {
                         )}
                       </Table.Cell>
                       <Table.Cell>
-                        <span
-                          onClick={() => {
-                            setShowModal(true);
-                            setUserIdToDelete(user._id);
-                          }}
-                          className="font-medium text-red-500 hover:underline cursor-pointer"
-                        >
-                          Delete
-                        </span>
+                        {user.isBlocked ? (
+                          <span
+                            onClick={() => {
+                              setShowModal(true);
+                              setUserIdToUpdate(user._id);
+                              setUpdateAction("unblock");
+                            }}
+                            className="font-medium text-yellow-500 hover:underline cursor-pointer"
+                          >
+                            <FaLock className="inline-block mr-1" /> Blocked
+                          </span>
+                        ) : (
+                          <span
+                            onClick={() => {
+                              setShowModal(true);
+                              setUserIdToUpdate(user._id);
+                              setUpdateAction("block");
+                            }}
+                            className="font-medium text-yellow-500 hover:underline cursor-pointer"
+                          >
+                            <FaUnlock className="inline-block mr-1" /> Unblocked
+                          </span>
+                        )}
                       </Table.Cell>
                     </Table.Row>
                   </Table.Body>
@@ -156,15 +195,29 @@ export default function DashUsers() {
                         )}
                       </Table.Cell>
                       <Table.Cell>
-                        <span
-                          onClick={() => {
-                            setShowModal(true);
-                            setUserIdToDelete(user._id);
-                          }}
-                          className="font-medium text-red-500 hover:underline cursor-pointer"
-                        >
-                          Delete
-                        </span>
+                        {user.isBlocked ? (
+                          <span
+                            onClick={() => {
+                              setShowModal(true);
+                              setUserIdToUpdate(user._id);
+                              setUpdateAction("unblock");
+                            }}
+                            className="font-medium text-yellow-500 hover:underline cursor-pointer"
+                          >
+                            <FaLock className="inline-block mr-1" /> Blocked
+                          </span>
+                        ) : (
+                          <span
+                            onClick={() => {
+                              setShowModal(true);
+                              setUserIdToUpdate(user._id);
+                              setUpdateAction("block");
+                            }}
+                            className="font-medium text-yellow-500 hover:underline cursor-pointer"
+                          >
+                            <FaUnlock className="inline-block mr-1" /> Unblocked
+                          </span>
+                        )}
                       </Table.Cell>
                     </Table.Row>
                   </Table.Body>
@@ -193,11 +246,16 @@ export default function DashUsers() {
           <div className="text-center">
             <HiOutlineExclamationCircle className="h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto" />
             <h3 className="mb-5 text-lg text-gray-500 dark:text-gray-400">
-              Are you sure you want to delete this user?
+              {updateAction === "block"
+                ? `Are you sure you want to block this user?`
+                : `Are you sure you want to unblock this user?`}
             </h3>
             <div className="flex justify-center gap-4">
-              <Button color="failure" onClick={handleDeleteUser}>
-                Yes, I'm sure
+              <Button
+                color={updateAction === "block" ? "failure" : "success"}
+                onClick={handleUpdateUser}
+              >
+                {updateAction === "block" ? "Block" : "Unblock"}
               </Button>
               <Button color="gray" onClick={() => setShowModal(false)}>
                 No, cancel
