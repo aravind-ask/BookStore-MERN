@@ -84,7 +84,7 @@ export default function DashSidebar() {
                 icon={HiDocumentText}
                 as="div"
               >
-                My Posts
+                My Orders
               </Sidebar.Item>
             </Link>
           )}
@@ -105,7 +105,16 @@ export default function DashSidebar() {
                   icon={HiAnnotation}
                   as="div"
                 >
-                  Comments
+                  All Orders
+                </Sidebar.Item>
+              </Link>
+              <Link to="/dashboard?tab=categories">
+                <Sidebar.Item
+                  active={tab === "categories"}
+                  icon={HiAnnotation}
+                  as="div"
+                >
+                  Categories
                 </Sidebar.Item>
               </Link>
             </>

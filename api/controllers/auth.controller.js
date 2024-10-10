@@ -4,28 +4,32 @@ import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
 
 export const signup = async (req, res, next) => {
-  const { username, email, password } = req.body;
-
-  if (
-    !username ||
-    !email ||
-    !password ||
-    username === "" ||
-    email === "" ||
-    password === ""
-  ) {
-    next(errorHandler(400, "All fields are required"));
-  }
-
-  const hashedPassword = bcryptjs.hashSync(password, 10);
-
-  const newUser = new User({
-    username,
-    email,
-    password: hashedPassword,
-  });
-
   try {
+    const { username, email, password } = req.body;
+
+    if (
+      !username ||
+      !email ||
+      !password ||
+      username === "" ||
+      email === "" ||
+      password === ""
+    ) {
+      next(errorHandler(400, "All fields are required"));
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      next(errorHandler(400, "User already exists"));
+    }
+
+    const hashedPassword = await bcryptjs.hashSync(password, 10);
+
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+    });
     await newUser.save();
     res.json("Signup successful");
   } catch (error) {
@@ -113,5 +117,3 @@ export const google = async (req, res, next) => {
     next(error);
   }
 };
-
-

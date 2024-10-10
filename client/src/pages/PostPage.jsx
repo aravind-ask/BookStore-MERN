@@ -254,9 +254,12 @@ export default function PostPage() {
       </div>
       <div className="mt-8">
         <h2 className="text-xl font-bold mb-4">Related Books</h2>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-5 gap-10">
           {relatedBooks.map((book) => (
-            <BookCard key={book._id} book={book} />
+            <div key={book.bookSlug} className="m-10">
+
+              <BookCard key={book._id} book={book} />
+            </div>
           ))}
         </div>
       </div>

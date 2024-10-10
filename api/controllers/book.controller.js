@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 // import  Category  from "../models/category.model.js";
 
 export const addBook = async (req, res, next) => {
+  console.log(req.body);
   const {
     title,
     author,
@@ -32,6 +33,7 @@ export const addBook = async (req, res, next) => {
   ) {
     return next(errorHandler(400, "All fields are required"));
   }
+  
   const slug = req.body.title
     .split(" ")
     .join("-")
@@ -55,6 +57,7 @@ export const addBook = async (req, res, next) => {
     await newBook.save();
     return next(errorHandler(200, "Book added successfully"));
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
@@ -183,13 +186,13 @@ export const updateBook = async (req, res, next) => {
   }
 };
 
-export const listBook = async (req, res) => {
+export const listBook = async (req, res, next) => {
   try {
     const { bookId } = req.params;
     const book = await Book.findById(bookId);
 
     if (!book) {
-      return res.status(404).json({ message: "Book not found" });
+      return next(errorHandler(404, "Book not found"));
     }
 
     book.isListed = true;
@@ -197,18 +200,18 @@ export const listBook = async (req, res) => {
 
     res.status(200).json({ message: "Book listed successfully", book });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Unlist a book
-export const unlistBook = async (req, res) => {
+export const unlistBook = async (req, res, next) => {
   try {
     const { bookId } = req.params;
     const book = await Book.findById(bookId);
 
     if (!book) {
-      return res.status(404).json({ message: "Book not found" });
+      return next(errorHandler(404, "Book not found"));
     }
 
     book.isListed = false;
@@ -216,6 +219,6 @@ export const unlistBook = async (req, res) => {
 
     res.status(200).json({ message: "Book unlisted successfully", book });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };

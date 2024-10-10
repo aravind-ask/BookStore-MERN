@@ -28,7 +28,7 @@ export default function FooterCom() {
               <Footer.Title title="Account" />
               <Footer.LinkGroup col>
                 <Footer.Link
-                  href="https://www.100jsprojects.com"
+                  to="/dashboard"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -54,7 +54,7 @@ export default function FooterCom() {
               <Footer.Title title="Quick Links" />
               <Footer.LinkGroup col>
                 <Footer.Link
-                  href="https://www.100jsprojects.com"
+                  href=""
                   target="_blank"
                   rel="noopener noreferrer"
                 >

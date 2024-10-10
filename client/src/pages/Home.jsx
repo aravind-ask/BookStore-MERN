@@ -29,12 +29,16 @@ export default function Home() {
         </h1>
 
         <p className="text-gray-500 text-xs sm:text-sm">
-          Here you'll find a variety of articles and tutorials on topics such as
-          web development, software engineering, and programming languages.
+          Your go-to destination for buying, selling,
+          and swapping second-hand books! Dive into a world of stories and
+          unlock hidden treasures while giving books a second life. Whether
+          you're hunting for a rare find or ready to pass on your favorites,
+          we’re here to connect you with fellow book lovers. Happy reading and
+          trading!
         </p>
         <div className="flex gap-6">
           <Link
-            to="/search"
+            to="/books"
             className="text-xs sm:text-sm text-teal-500 font-bold hover:underline"
           >
             View all books
@@ -58,7 +62,7 @@ export default function Home() {
               ))}
             </div>
             <Link
-              to={"/search"}
+              to={"/books"}
               className="text-lg text-teal-500 hover:underline text-center"
             >
               View all books
