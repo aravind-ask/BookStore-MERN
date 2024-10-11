@@ -10,7 +10,7 @@ export const addCategory = async (req, res, next) => {
   if (!name.trim()) {
     return next(errorHandler(400, "Category name cannot be empty"));
   }
-  console.log(req.body)
+  console.log(req.body);
   try {
     const newCategory = new Category({ name, description });
     await newCategory.save();
@@ -50,6 +50,19 @@ export const getCategories = async (req, res, next) => {
   try {
     const categories = await Category.find();
     res.status(200).json(categories);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCategory = async (req, res, next) => {
+  try {
+    const { categoryId } = req.params;
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return next(errorHandler(404, "Category not found"));
+    }
+    res.status(200).json(category);
   } catch (error) {
     next(error);
   }

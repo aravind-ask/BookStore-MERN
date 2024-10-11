@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import PostCard from "../components/BookCard";
 import BookCard from "../components/BookCard";
 
 export default function Home() {

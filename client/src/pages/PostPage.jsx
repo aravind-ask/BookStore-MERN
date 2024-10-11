@@ -7,8 +7,11 @@ import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import CommentSection from "../components/CommentSection";
 import BookCard from "../components/BookCard";
+import { useSelector } from "react-redux";
 
 export default function PostPage() {
+  const { currentUser } = useSelector((state) => state.user);
+
   const { bookSlug } = useParams();
   const [loading, setloading] = useState(true);
   const [book, setBook] = useState(null);
@@ -19,6 +22,32 @@ export default function PostPage() {
   });
 
   const [relatedBooks, setRelatedBooks] = useState([]);
+  const [category, setCategory] = useState(null)
+
+  useEffect(() => {
+    console.log("Book state:", book);
+    console.log("useEffect hook called"); // <--- Add this line
+    // <--- Add this line
+    const fetchCategory = async () => {
+      console.log(book.category);
+      if (!book || !book.category) return;
+      try {
+        const res = await fetch(`api/category/get-category/${book.category}`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch category");
+        }
+        const data = await res.json();
+        setCategory(data);
+        console.log("Category data:", data); // <--- Add this line
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    if (book) {
+      fetchCategory();
+    }
+  }, [book]);
+
   useEffect(() => {
     const fetchRelatedBooks = async () => {
       if (!book) return;
@@ -104,6 +133,46 @@ export default function PostPage() {
     };
     fetchListedBy();
   }, [book]);
+
+  const handleWishlist = async () => {
+    try {
+      if (!currentUser || !book) {
+        throw new Error("User  or book data is missing");
+      }
+
+      const requestBody = {
+        bookId: book._id,
+        userId: currentUser._id,
+        userName: currentUser.username,
+        title: book.title,
+        price: book.price,
+        images: book.images,
+        slug: book.slug,
+        author: book.author
+      };
+
+      const response = await fetch("/api/wishlist/add-to-wishlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add book to wishlist");
+      }
+
+      const data = await response.json();
+      // Update the UI to reflect the change
+      // For example, display a success message or update a wishlist count
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+      // Display an error message to the user
+      alert("Failed to add book to wishlist. Please try again later.");
+    }
+  };
 
   if (loading)
     return (
@@ -206,7 +275,7 @@ export default function PostPage() {
             <span className="font-bold">{listedBy && listedBy.username}</span>
           </p>
           <p className="text-gray-600 mb-2 dark:text-gray-100">
-            Categories: <span className="font-bold">{book.category}</span>
+            Categories: <span className="font-bold">{category}</span>
           </p>
           <p className="text-gray-600 mb-2 dark:text-gray-100">
             Publisher: <span className="font-bold">{book.publisher}</span>
@@ -229,7 +298,10 @@ export default function PostPage() {
             <Button className="bg-red-500 text-white px-6 py-2 rounded-lg">
               Add To Cart
             </Button>
-            <Button className="bg-white border border-gray-300 text-gray-600 px-6 py-2 rounded-full">
+            <Button
+              onClick={handleWishlist}
+              className="bg-white border border-gray-300 text-gray-600 px-6 py-2 rounded-full"
+            >
               <i className="fas fa-heart text-lg dark:text-gray-100"></i>
             </Button>
           </div>
@@ -257,7 +329,6 @@ export default function PostPage() {
         <div className="grid grid-cols-5 gap-10">
           {relatedBooks.map((book) => (
             <div key={book.bookSlug} className="m-10">
-
               <BookCard key={book._id} book={book} />
             </div>
           ))}

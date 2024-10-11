@@ -7,7 +7,6 @@ import { set } from "mongoose";
 
 export default function Dashbooks() {
   const { currentUser } = useSelector((state) => state.user);
-  console.log(currentUser);
   const [userBooks, setUserBooks] = useState([]);
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -38,7 +37,7 @@ export default function Dashbooks() {
     const startIndex = userBooks.length;
     try {
       const res = await fetch(
-        `/api/post/getbooks?isAdmin=true&userId=${currentUser._id}&startIndex=${startIndex}`
+        `/api/books/getbooks?isAdmin=true&userId=${currentUser._id}&startIndex=${startIndex}`
       );
       const data = await res.json();
       if (res.ok) {

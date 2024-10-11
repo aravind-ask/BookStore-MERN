@@ -18,6 +18,8 @@ export default function UpdateBook() {
   const [files, setFiles] = useState(null);
   const [imageUploadProgress, setImageUploadProgress] = useState(null);
   const [imageUploadError, setImageUploadError] = useState(null);
+  const [categories, setCategories] = useState([]);
+
   const [formData, setFormData] = useState({
     title: "",
     category: "uncategorized",
@@ -36,6 +38,20 @@ export default function UpdateBook() {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
   const [uploadedImages, setUploadedImages] = useState([]); // new state to store uploaded images
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("/api/category/get-categories");
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -156,14 +172,13 @@ export default function UpdateBook() {
             onChange={(e) =>
               setFormData({ ...formData, category: e.target.value })
             }
-            value={formData.category || ""}
           >
             <option value="uncategorized">Select a category</option>
-            <option value="fiction">Fiction</option>
-            <option value="non-fiction">Non-Fiction</option>
-            <option value="biography">Biography</option>
-            <option value="auto-biography">Auto-Biography</option>
-            <option value="academic">Academic</option>
+            {categories.map((category) => (
+              <option key={category._id} value={category._id}>
+                {category.name}
+              </option>
+            ))}
           </Select>
         </div>
         <div className="flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3">
