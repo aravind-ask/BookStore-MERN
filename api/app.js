@@ -9,6 +9,7 @@ import bookRoutes from "./routes/books.route.js";
 import ratingRoutes from "./routes/rating.route.js";
 import categoryRoutes from "./routes/category.routes.js";
 import wishlistRoutes from "./routes/wishlist.routes.js";
+import cartRoutes from "./routes/cart.routes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -38,6 +39,7 @@ app.use("/api/books", bookRoutes);
 app.use("/api/rating", ratingRoutes)
 app.use("/api/category", categoryRoutes)
 app.use("/api/wishlist", wishlistRoutes)
+app.use("/api/cart", cartRoutes)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

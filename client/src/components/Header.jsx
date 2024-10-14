@@ -84,7 +84,7 @@ export default function Header() {
 
         {currentUser ? (
           <>
-            <Link to="/cart">
+            <Link to="/profile/cart">
               <Button color="gray" pill>
                 <RiShoppingCart2Line size={20} />
               </Button>

@@ -7,10 +7,15 @@ import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import CommentSection from "../components/CommentSection";
 import BookCard from "../components/BookCard";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, fetchCartItems } from "../redux/cart/cartSlice";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function PostPage() {
   const { currentUser } = useSelector((state) => state.user);
+  const { cartItems } = useSelector((state) => state.cart);
+  console.log("Cart:", cartItems);
 
   const { bookSlug } = useParams();
   const [loading, setloading] = useState(true);
@@ -20,9 +25,9 @@ export default function PostPage() {
     images: [],
     isOpen: false,
   });
-
+  const dispatch = useDispatch();
   const [relatedBooks, setRelatedBooks] = useState([]);
-  const [category, setCategory] = useState(null)
+  const [category, setCategory] = useState(null);
 
   useEffect(() => {
     console.log("Book state:", book);
@@ -134,6 +139,22 @@ export default function PostPage() {
     fetchListedBy();
   }, [book]);
 
+  const handleAddToCart = () => {
+    if (book.stock > 0) {
+      const quantity = Math.min(1, book.stock); // limit quantity to 1 or the remaining stock
+      dispatch(
+        addToCart({ userId: currentUser._id, bookId: book._id, quantity: 1 })
+      ).then((data) => {
+        if (data?.payload) {
+          dispatch(fetchCartItems(currentUser._id));
+          toast.success("Book added to cart");
+        }
+      });
+    } else {
+      toast.error("Out of stock");
+    }
+  };
+
   const handleWishlist = async () => {
     try {
       if (!currentUser || !book) {
@@ -148,7 +169,7 @@ export default function PostPage() {
         price: book.price,
         images: book.images,
         slug: book.slug,
-        author: book.author
+        author: book.author,
       };
 
       const response = await fetch("/api/wishlist/add-to-wishlist", {
@@ -166,7 +187,7 @@ export default function PostPage() {
       const data = await response.json();
       // Update the UI to reflect the change
       // For example, display a success message or update a wishlist count
-      console.log(data);
+      toast.success("Book added to wishlist");
     } catch (error) {
       console.error(error);
       // Display an error message to the user
@@ -188,6 +209,7 @@ export default function PostPage() {
   }
   return (
     <main className="max-w-6xl mx-auto pt-5">
+      <ToastContainer />
       <nav className="flex mt-8 mb-8">
         <ol className="breadcrumb flex items-center text-sm gap-5">
           <li className="breadcrumb-item">
@@ -288,14 +310,20 @@ export default function PostPage() {
             dangerouslySetInnerHTML={{ __html: book && book.description }}
           ></div>
           <p className="text-gray-600 mb-2 dark:text-gray-100">
-            Condition: <span className="font-bold">{book.condition}</span>
+            Condition: <span className="font-bold">{book.Condition}</span>
+          </p>
+          <p className="text-gray-600 mb-2 dark:text-gray-100">
+            Stock: <span className="font-bold">{book.stock}</span>
           </p>
 
           <div className="flex space-x-4">
             <Button className="bg-red-500 text-white px-6 py-2 rounded-lg">
               Buy Now
             </Button>
-            <Button className="bg-red-500 text-white px-6 py-2 rounded-lg">
+            <Button
+              onClick={handleAddToCart}
+              className="bg-red-500 text-white px-6 py-2 rounded-lg"
+            >
               Add To Cart
             </Button>
             <Button

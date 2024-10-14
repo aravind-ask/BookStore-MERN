@@ -1,6 +1,6 @@
-import { Alert, Button, FileInput, Select, TextInput } from "flowbite-react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import { Alert, Button, FileInput, Select, Textarea, TextInput } from "flowbite-react";
+// import ReactQuill from "react-quill";
+// import "react-quill/dist/quill.snow.css";
 import {
   getDownloadURL,
   getStorage,
@@ -222,11 +222,11 @@ export default function CreatePost() {
             }
           >
             <option value="uncategorized">Condition</option>
-            <option value="fiction">New</option>
-            <option value="non-fiction">Used</option>
-            <option value="biography">Good</option>
-            <option value="auto-biography">Average</option>
-            <option value="academic">Worst</option>
+            <option value="New">New</option>
+            <option value="Used">Used</option>
+            <option value="Good">Good</option>
+            <option value="Average">Average</option>
+            <option value="Worst">Worst</option>
           </Select>
         </div>
         {validationError && (
@@ -270,14 +270,15 @@ export default function CreatePost() {
             }}
           />
         </div>
-        <ReactQuill
-          theme="snow"
+        <Textarea
+          id="description"
           placeholder="Description"
-          className="h-72 mb-12"
           required
-          onChange={(value) => {
-            setFormData({ ...formData, description: value });
-          }}
+          rows={8}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
+          value={formData.description || ""}
         />
         <Button type="submit" gradientDuoTone="purpleToPink">
           Publish
