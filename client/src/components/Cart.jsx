@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faShoppingCart } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -9,11 +10,12 @@ import {
 } from "../redux/cart/cartSlice";
 
 const CartPage = () => {
-  const [cart, setCart] = useState([]);
   const [message, setMessage] = useState(""); // Add a state to store the message
   const [error, setError] = useState(false); // Add a state to store the error flag
   const { currentUser } = useSelector((state) => state.user);
   const { cartItems } = useSelector((state) => state.cart);
+  const navigate = useNavigate();
+
   const totalCartAmount =
     cartItems && cartItems.items && cartItems.items.length > 0
       ? cartItems.items.reduce(
@@ -25,23 +27,6 @@ const CartPage = () => {
 
   const dispatch = useDispatch();
 
-  // const fetchCartItems = async (userId) => {
-  //   try {
-  //     const url = `/api/cart/${userId}`;
-  //     const response = await fetch(url);
-  //     if (response.ok) {
-  //       const data = await response.json();
-  //       setCart(data);
-  //       setError(false);
-  //     } else {
-  //       setError(true);
-  //       setMessage("Failed to fetch cart items");
-  //     }
-  //   } catch (error) {
-  //     setError(true);
-  //     setMessage("Error fetching cart items: " + error.message);
-  //   }
-  // };
 
   function handleQuantityChange(bookId, quantity, action) {
     dispatch(
@@ -68,12 +53,23 @@ const CartPage = () => {
     );
   }
 
+   const handleCheckout = () => {
+     // Here you can perform any validation or processing before checkout
+     if (cartItems.items.length === 0) {
+       setMessage("Your cart is empty. Please add items before checking out.");
+       setError(true);
+       return;
+     }
+
+    navigate("/book/checkout", { state: { cartItems } });
+   };
+
   useEffect(() => {
     // fetchCartItems(userId);
     dispatch(fetchCartItems(currentUser._id));
   }, [dispatch]);
 
-  if (!cartItems.items || cartItems.items.length === 0) {
+  if (!cartItems?.items || cartItems?.items?.length === 0) {
     return (
       <div className="flex justify-center mt-20">
         <div className="bg-white rounded shadow-md p-4 max-w-md mx-auto">
@@ -163,7 +159,10 @@ const CartPage = () => {
         </table>
         <div className="flex justify-between mt-4">
           <h3 className="text-lg font-bold">Total Price: {totalCartAmount}</h3>
-          <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          <button
+            onClick={handleCheckout}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          >
             Proceed to Checkout
           </button>
         </div>

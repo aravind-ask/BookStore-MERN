@@ -16,6 +16,7 @@ import Search from "./pages/Search";
 import LoginProtected from "./components/LoginProtected";
 import Wishlist from "./pages/Wishlist";
 import CartPage from "./components/Cart";
+import CheckOut from "./pages/CheckOut";
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/update-book/:bookId" element={<UpdateBook />} />
           <Route path="/profile/wishlist" element={<Wishlist />} />
           <Route path="/profile/cart" element={<CartPage />} />
+          <Route path="/book/checkout" element={<CheckOut />} />
         </Route>
       </Routes>
       <Footer />

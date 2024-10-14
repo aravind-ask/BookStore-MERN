@@ -101,57 +101,48 @@ export default function DashAddress() {
               Add New Address
             </Button>
           </div>
-          <Table hoverable className="shadow-md mt-10">
-            <Table.Head>
-              <Table.HeadCell>Name</Table.HeadCell>
-              <Table.HeadCell>Address</Table.HeadCell>
-              <Table.HeadCell>City</Table.HeadCell>
-              <Table.HeadCell>State</Table.HeadCell>
-              <Table.HeadCell>pinCode</Table.HeadCell>
-              <Table.HeadCell>Country</Table.HeadCell>
-              <Table.HeadCell>
-                <span>Edit</span>
-              </Table.HeadCell>
-              <Table.HeadCell>
-                <span>Delete</span>
-              </Table.HeadCell>
-            </Table.Head>
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {addressList.map((address) => (
-              <Table.Body key={address._id} className="divide-y">
-                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                  <Table.Cell>{address.name}</Table.Cell>
-                  <Table.Cell>{address.address}</Table.Cell>
-                  <Table.Cell>{address.city}</Table.Cell>
-                  <Table.Cell>{address.state}</Table.Cell>
-                  <Table.Cell>{address.pinCode}</Table.Cell>
-                  <Table.Cell>{address.phone}</Table.Cell>
-                  <Table.Cell>
-                    <span
-                      onClick={() => {
-                        setAddressToEdit(address);
-                        setShowEditModal(true);
-                        setAddressIdToEdit(address._id);
-                      }}
-                      className="text-teal-500 hover:underline cursor-pointer"
-                    >
-                      <AiOutlineEdit className="h-5 w-5" />
-                    </span>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <span
-                      onClick={() => {
-                        setShowDeleteModal(true);
-                        setAddressIdToDelete(address._id);
-                      }}
-                      className="text-red-500 hover:underline cursor-pointer"
-                    >
-                      <AiOutlineDelete className="h-5 w-5" />
-                    </span>
-                  </Table.Cell>
-                </Table.Row>
-              </Table.Body>
+              <div
+                key={address._id}
+                className="bg-white dark:bg-gray-800 shadow-md rounded-md p-4"
+              >
+                <h5 className="text-lg font-bold">{address.name}</h5>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {address.address}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {address.city}, {address.state} {address.pinCode}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {address.phone}
+                </p>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    color="gray"
+                    onClick={() => {
+                      setAddressToEdit(address);
+                      setShowEditModal(true);
+                      setAddressIdToEdit(address._id);
+                    }}
+                    className="w-full"
+                  >
+                    <AiOutlineEdit className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    color="failure"
+                    onClick={() => {
+                      setShowDeleteModal(true);
+                      setAddressIdToDelete(address._id);
+                    }}
+                    className="w-full"
+                  >
+                    <AiOutlineDelete className="h-5 w-5" />
+                  </Button>
+                </div>
+              </div>
             ))}
-          </Table>
+          </div>
           <Modal
             show={showDeleteModal}
             onClose={() => setShowDeleteModal(false)}
