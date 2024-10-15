@@ -89,9 +89,9 @@ export default function DashSidebar() {
             </Link>
           )}
           {!currentUser.isAdmin && (
-            <Link to="/dashboard?tab=posts">
+            <Link to="/dashboard?tab=orders">
               <Sidebar.Item
-                active={tab === "posts"}
+                active={tab === "orders"}
                 icon={HiDocumentText}
                 as="div"
               >
@@ -110,9 +110,9 @@ export default function DashSidebar() {
                   Users
                 </Sidebar.Item>
               </Link>
-              <Link to="/dashboard?tab=comments">
+              <Link to="/dashboard?tab=orders">
                 <Sidebar.Item
-                  active={tab === "comments"}
+                  active={tab === "orders"}
                   icon={HiAnnotation}
                   as="div"
                 >

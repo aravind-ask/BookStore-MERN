@@ -2,12 +2,13 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    userid: {
+    orderNumber: {
+      type: String,
+      required: true,
+    },
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-    },
-    user: {
-      type: String,
     },
     cartItems: [
       {
@@ -41,7 +42,7 @@ const orderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Address",
     },
-    paymentMethord: {
+    paymentMethod: {
       type: String,
     },
     razorpayPaymentId: {
@@ -49,6 +50,9 @@ const orderSchema = new mongoose.Schema(
     },
     orderDate: {
       type: Date,
+    },
+    orderSummary: {
+      type: Object,
     },
   },
   { timestamps: true }

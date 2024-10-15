@@ -73,6 +73,7 @@ const addressSlice = createSlice({
       })
       .addCase(fetchAddress.rejected, (state) => {
         state.isLoading = false;
+        state.addressList = [];
       })
       .addCase(editAddress.pending, (state) => {
         state.isLoading = true;
