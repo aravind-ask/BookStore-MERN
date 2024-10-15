@@ -17,6 +17,7 @@ import LoginProtected from "./components/LoginProtected";
 import Wishlist from "./pages/Wishlist";
 import CartPage from "./components/Cart";
 import CheckOut from "./pages/CheckOut";
+import OrderSuccess from "./pages/OrderSuccess";
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
           <Route path="/profile/wishlist" element={<Wishlist />} />
           <Route path="/profile/cart" element={<CartPage />} />
           <Route path="/book/checkout" element={<CheckOut />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
         </Route>
       </Routes>
       <Footer />

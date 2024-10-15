@@ -14,7 +14,7 @@ export const addToCart = createAsyncThunk(
       bookId,
       quantity,
     });
-    console.log("add response",response.data);
+    console.log("add response", response.data);
     return response.data;
   }
 );
@@ -24,7 +24,7 @@ export const fetchCartItems = createAsyncThunk(
   async (userId) => {
     console.log(userId);
     const response = await axios.get(`/api/cart/${userId}`);
-    console.log("response",response.data);
+    console.log("response", response.data);
     return response.data;
   }
 );
@@ -37,6 +37,12 @@ export const deleteCartItem = createAsyncThunk(
     return response.data;
   }
 );
+
+export const clearCart = createAsyncThunk("api/cart/clearCart", async (userId) => {
+  const response = await axios.delete(`/api/cart/clear/${userId}`);
+  console.log(response.data);
+  return response.data;
+});
 
 export const updateCartQty = createAsyncThunk(
   "cart/updateCart",
@@ -100,8 +106,19 @@ const ShoppingCartSlice = createSlice({
       .addCase(deleteCartItem.rejected, (state) => {
         state.isLoading = false;
         state.cartItems = [];
+      })
+      .addCase(clearCart.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(clearCart.fulfilled, (state) => {
+        state.isLoading = false;
+        state.cartItems = [];
+      })
+      .addCase(clearCart.rejected, (state) => {
+        state.isLoading = false;
+        state.cartItems = [];
       });
   },
 });
 
-export default ShoppingCartSlice.reducer
+export default ShoppingCartSlice.reducer;

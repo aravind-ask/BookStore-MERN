@@ -1,25 +1,35 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarker, faCreditCard, faMoneyBill } from '@fortawesome/free-solid-svg-icons';
-import { addNewAddress, editAddress, fetchAddress } from "../redux/address/addressSlice";
+import React from "react";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faMapMarker,
+  faCreditCard,
+  faMoneyBill,
+} from "@fortawesome/free-solid-svg-icons";
+import {
+  addNewAddress,
+  editAddress,
+  fetchAddress,
+} from "../redux/address/addressSlice";
 import { useLocation } from "react-router-dom";
-import { CartItems } from '../components/CartItems';
-import { Button, Modal } from 'flowbite-react';
-import { AiOutlineEdit } from 'react-icons/ai';
-
+import { CartItems } from "../components/CartItems";
+import { Button, Modal } from "flowbite-react";
+import { AiOutlineEdit } from "react-icons/ai";
+import { clearCart } from "../redux/cart/cartSlice";
 
 const CheckoutPage = () => {
-    const location = useLocation();
-    const cartItems = location.state?.cartItems;
+  const location = useLocation();
+  const cartItems = location.state?.cartItems;
 
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
+  const [paymentMethod, setPaymentMethod] = useState("cash_on_delivery");
   const [orderSummary, setOrderSummary] = useState({});
   const { currentUser } = useSelector((state) => state.user);
   const { addressList } = useSelector((state) => state.address);
+  console.log(addressList);
   const [newAddress, setNewAddress] = useState({
     name: "",
     address: "",
@@ -31,11 +41,12 @@ const CheckoutPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [addressToEdit, setAddressToEdit] = useState({});
+  const [error, setError] = useState("");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  console.log("prp",cartItems)
+  console.log("prp", cartItems.items);
 
   useEffect(() => {
     dispatch(fetchAddress(currentUser._id));
@@ -43,42 +54,54 @@ const CheckoutPage = () => {
 
   const handleAddressChange = (address) => {
     setSelectedAddress(address);
+    console.log(selectedAddress);
   };
 
   const handlePaymentMethodChange = (method) => {
     setPaymentMethod(method);
+    console.log(paymentMethod);
   };
 
-  const handlePlaceOrder = () => {
-    const orderData = {
-      userId: currentUser._id,
-      cartItems,
-      address: selectedAddress,
-      paymentMethod,
-    };
-    dispatch(createOrder(orderData)).then((data) => {
-      if (data?.payload) {
-        navigate('/book/order-success', { state: { orderId: data.payload.orderId } });
+  const handlePlaceOrder = async () => {
+    if (paymentMethod === "cash_on_delivery") {
+      try {
+        const response = await axios.post("/api/order/checkout", {
+          cartItems,
+          selectedAddress,
+          paymentMethod,
+          orderSummary,
+        });
+
+        if (response.status === 200) {
+          dispatch(clearCart(currentUser._id));
+          navigate("/order-success");
+          console.log("Order placed successfully");
+        } else {
+          setError("Error placing order");
+        }
+      } catch (error) {
+        setError("Error placing order");
       }
-    });
+    } else {
+      setError("Invalid payment method");
+    }
   };
 
-   const handleAddNewAddress = async () => {
-     try {
-       await dispatch(addNewAddress(newAddress));
-       setNewAddress({
-         name: "",
-         address: "",
-         city: "",
-         state: "",
-         pinCode: "",
-         phone: "",
-       });
-     } catch (error) {
-       console.log(error.message);
-     }
-   };
-
+  const handleAddNewAddress = async () => {
+    try {
+      await dispatch(addNewAddress(newAddress));
+      setNewAddress({
+        name: "",
+        address: "",
+        city: "",
+        state: "",
+        pinCode: "",
+        phone: "",
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   const handleEditAddress = async () => {
     try {
@@ -184,7 +207,7 @@ const CheckoutPage = () => {
         </div>
         <h3 className="text-lg font-bold mb-2">Payment Method</h3>
         <div className="flex flex-wrap -mx-4">
-          <div className="w-full md:w-1/2 xl:w-1/3 p-4 mb-4">
+          {/* <div className="flex items-center gap-5 w-full md:w-1/2 xl:w-1/3 p-4 mb-4">
             <input
               type="radio"
               name="paymentMethod"
@@ -197,7 +220,7 @@ const CheckoutPage = () => {
               <span className="ml-2">Credit Card</span>
             </div>
           </div>
-          <div className="w-full md:w-1/2 xl:w-1/3 p-4 mb-4">
+          <div className="flex items-center gap-5 w-full md:w-1/2 xl:w-1/3 p-4 mb-4">
             <input
               type="radio"
               name="paymentMethod"
@@ -209,14 +232,14 @@ const CheckoutPage = () => {
               <FontAwesomeIcon icon={faCreditCard} size="lg" />
               <span className="ml-2">Debit Card</span>
             </div>
-          </div>
-          <div className="w-full md:w-1/2 xl:w-1/3 p-4 mb-4">
+          </div> */}
+          <div className="flex items-center gap-5 w-full md:w-1/2 xl:w-1/3 p-4 mb-4">
             <input
               type="radio"
               name="paymentMethod"
               value="cash_on_delivery"
-              checked={paymentMethod === "cash_on_delivery"}
-              onChange={() => handlePaymentMethodChange("cash_on_delivery")}
+              //   checked={paymentMethod === "cash_on_delivery"}
+              onClick={() => handlePaymentMethodChange("cash_on_delivery")}
             />
             <div className="flex items-center">
               <FontAwesomeIcon icon={faMoneyBill} size="lg" />

@@ -152,3 +152,24 @@ export const updateQuantity = async (req, res, next) => {
     next(error);
   }
 };
+
+export const clearCartItems = async (req, res, next) => {
+  try {
+    const userId = req.params.userId;
+    if (!userId) {
+      return next(errorHandler(400, "Invalid Data Provided!"));
+    }
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      return next(errorHandler(404, "Cart not found"));
+    }
+
+  cart.items = [];
+  
+  await cart.save();
+  res.status(200).json({ data: { ...cart._doc, items: [] } });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};

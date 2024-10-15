@@ -11,6 +11,7 @@ import categoryRoutes from "./routes/category.routes.js";
 import wishlistRoutes from "./routes/wishlist.routes.js";
 import addressRoutes from "./routes/address.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
+import orderRoutes from "./routes/order.routes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -42,6 +43,7 @@ app.use("/api/category", categoryRoutes)
 app.use("/api/wishlist", wishlistRoutes)
 app.use("/api/cart", cartRoutes)
 app.use("/api/address", addressRoutes)
+app.use("/api/order", orderRoutes)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
