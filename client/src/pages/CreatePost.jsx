@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { useNavigate } from "react-router-dom";
+import Cropper from "react-easy-crop";
 
 export default function CreatePost() {
   const [files, setFiles] = useState(null);
@@ -39,6 +40,8 @@ export default function CreatePost() {
       console.error(error);
     }
   };
+const [croppedImages, setCroppedImages] = useState([]);
+const [cropperRef, setCropperRef] = useState(null);
   const handleUploadImages = async () => {
     try {
       if (files.length === 0) {
@@ -53,6 +56,19 @@ export default function CreatePost() {
         const fileName = new Date().getTime() + "-" + file.name;
         const storageRef = ref(storage, fileName);
         const uploadTask = uploadBytesResumable(storageRef, file);
+
+        // Add a cropping step
+        const cropper = new Cropper(file, {
+          aspectRatio: 1, // Optional, set the aspect ratio
+          zoomable: true, // Optional, allow zooming
+          movable: true, // Optional, allow moving
+        });
+
+        const croppedImage = await cropper.getCroppedCanvas().toBlob();
+        const croppedFile = new File([croppedImage], file.name, {
+          type: file.type,
+        });
+
         uploadTask.on(
           "state_changed",
           (snapshot) => {
@@ -72,6 +88,7 @@ export default function CreatePost() {
                 setImageUploadError(null);
                 setFormData({ ...formData, images });
                 setUploadedImages(images); // update uploadedImages state
+                setCroppedImages(croppedImages.concat(croppedFile)); // update croppedImages state
               }
             });
           }
@@ -184,11 +201,11 @@ export default function CreatePost() {
         <div className="flex flex-col gap-4">
           {uploadedImages.length > 0 && (
             <div className="flex flex-wrap gap-4">
-              {uploadedImages.map((image, index) => (
+              {croppedImages.map((image, index) => (
                 <img
                   key={index}
-                  src={image}
-                  alt="Uploaded Image"
+                  src={URL.createObjectURL(image)}
+                  alt="Cropped Image"
                   className="w-32 h-32 object-cover"
                 />
               ))}

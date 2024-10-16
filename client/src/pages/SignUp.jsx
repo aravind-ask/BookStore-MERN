@@ -1,13 +1,26 @@
-import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
+import {
+  Alert,
+  Button,
+  Label,
+  Modal,
+  Spinner,
+  TextInput,
+} from "flowbite-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../components/OAuth";
+import { useDispatch } from "react-redux";
+import { signInFailure, signInSuccess } from "../redux/user/userSlice";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otp, setOtp] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
   };
@@ -28,15 +41,37 @@ export default function SignUp() {
       if (data.success === false) {
         return setErrorMessage(data.message);
       }
+      setOtpSent(true);
+      setOtpModalOpen(true);
       setLoading(false);
-      if (res.ok) {
-        navigate("/sign-in");
-      }
     } catch (error) {
       setErrorMessage(error.message);
       setLoading(false);
     }
   };
+
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, otp: otp }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOtpModalOpen(false);
+        dispatch(signInSuccess(data));
+        navigate("/");
+      } else {
+        setErrorMessage("Invalid Otp");
+        dispatch(signInFailure(data.message));
+      }
+    } catch (error) {
+      setErrorMessage(error.message);
+    }
+  };
+
   return (
     <div className="min-h-screen mt-20">
       <div className="flex p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
@@ -112,6 +147,28 @@ export default function SignUp() {
           )}
         </div>
       </div>
+      <Modal
+        show={otpModalOpen}
+        onClose={() => setOtpModalOpen(false)}
+        size="md"
+      >
+        <Modal.Header>Enter OTP</Modal.Header>
+        <Modal.Body>
+          <TextInput
+            type="text"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.trim())}
+          />
+          <Button
+            gradientDuoTone="purpleToPink"
+            type="submit"
+            onClick={handleOtpSubmit}
+          >
+            Verify OTP
+          </Button>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }
