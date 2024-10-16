@@ -7,6 +7,7 @@ import { set } from "mongoose";
 
 export default function Dashbooks() {
   const { currentUser } = useSelector((state) => state.user);
+  
   const [userBooks, setUserBooks] = useState([]);
   const [showMore, setShowMore] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -143,7 +144,7 @@ export default function Dashbooks() {
                       {book.price}
                     </Link>
                   </Table.Cell>
-                  <Table.Cell>{book.category}</Table.Cell>
+                  <Table.Cell>{book.category.name}</Table.Cell>
                   <Table.Cell>
                     <Link
                       className="font-medium text-gray-900 dark:text-white"

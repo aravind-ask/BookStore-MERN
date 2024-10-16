@@ -8,6 +8,7 @@ import {
   fetchCartItems,
   updateCartQty,
 } from "../redux/cart/cartSlice";
+import { toast, ToastContainer } from "react-toastify";
 
 const CartPage = () => {
   const [message, setMessage] = useState(""); // Add a state to store the message
@@ -29,11 +30,24 @@ const CartPage = () => {
 
 
   function handleQuantityChange(bookId, quantity, action) {
+    const book = cartItems.items.find((item) => item.bookId === bookId);
+
+    if (!book) return; // If the book is not found, do nothing
+
+    let newQuantity = action === "plus" ? quantity + 1 : quantity - 1;
+
+    // Check if the new quantity exceeds the stock limit
+    if (newQuantity > book.stock) {
+      toast.error("You have reached the stock limit for this item.");
+      return; // Prevent further action if stock limit is reached
+    }
+
+    // Dispatch the updateCartQty action
     dispatch(
       updateCartQty({
         userId: currentUser._id,
         bookId: bookId,
-        quantity: action === "plus" ? quantity + 1 : quantity - 1,
+        quantity: newQuantity,
       })
     ).then((data) => {
       if (data?.payload) {
@@ -92,6 +106,8 @@ const CartPage = () => {
   }
   return (
     <div className="max-w-4xl mx-auto p-4 pt-6">
+      <ToastContainer />
+
       <h2 className="text-2xl font-bold mb-4">Your Cart</h2>
       {message && (
         <div

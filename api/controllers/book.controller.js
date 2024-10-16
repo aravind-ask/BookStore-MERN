@@ -104,7 +104,8 @@ export const getBooks = async (req, res, next) => {
     const books = await Book.find(filter)
       .sort({ updatedAt: sortDirection })
       .skip(startIndex)
-      .limit(limit);
+      .limit(limit)
+      .populate("category");
 
     const totalBooks = await Book.countDocuments();
 

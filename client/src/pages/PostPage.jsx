@@ -1,16 +1,18 @@
-import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Button, Spinner } from "flowbite-react";
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
 import CommentSection from "../components/CommentSection";
 import BookCard from "../components/BookCard";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart, fetchCartItems } from "../redux/cart/cartSlice";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Modal from "react-modal";
 
 export default function PostPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -21,48 +23,47 @@ export default function PostPage() {
   const [loading, setloading] = useState(true);
   const [book, setBook] = useState(null);
   const [error, setError] = useState(null);
-  const [lightbox, setLightbox] = useState({
-    images: [],
-    isOpen: false,
-  });
   const dispatch = useDispatch();
   const [relatedBooks, setRelatedBooks] = useState([]);
-  const [category, setCategory] = useState(null);
 
-  useEffect(() => {
-    console.log("Book state:", book);
-    console.log("useEffect hook called"); // <--- Add this line
-    // <--- Add this line
-    const fetchCategory = async () => {
-      console.log(book.category);
-      if (!book || !book.category) return;
-      try {
-        const res = await fetch(`api/category/get-category/${book.category}`);
-        if (!res.ok) {
-          throw new Error("Failed to fetch category");
-        }
-        const data = await res.json();
-        setCategory(data);
-        console.log("Category data:", data); // <--- Add this line
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    if (book) {
-      fetchCategory();
-    }
-  }, [book]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+
+  // Function to open modal with selected image
+  const handleImageClick = (image) => {
+    setSelectedImage(image);
+    setIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+    setSelectedImage("");
+  };
+
+  // Slider settings
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    centerMode: true,
+    centerPadding: "20%",
+    autoplay: true,
+    autoplaySpeed: 3000,
+    swipe: true,
+    arrows: true,
+  };
 
   useEffect(() => {
     const fetchRelatedBooks = async () => {
       if (!book) return;
-
       try {
         const authorRelatedBooksResponse = await fetch(
           `/api/books/getbooks?author=${book.author}`
         );
         const categoryRelatedBooksResponse = await fetch(
-          `/api/books/getbooks?category=${book.category}`
+          `/api/books/getbooks?category=${book.category._id}`
         );
 
         const authorRelatedBooks = await authorRelatedBooksResponse.json();
@@ -88,14 +89,6 @@ export default function PostPage() {
 
     fetchRelatedBooks();
   }, [book]);
-
-  const handleImageClick = (index) => {
-    setLightbox({
-      images: book.images,
-      isOpen: true,
-      startIndex: index,
-    });
-  };
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -140,19 +133,21 @@ export default function PostPage() {
   }, [book]);
 
   const handleAddToCart = () => {
-    if (book.stock > 0) {
-      const quantity = Math.min(1, book.stock); // limit quantity to 1 or the remaining stock
-      dispatch(
-        addToCart({ userId: currentUser._id, bookId: book._id, quantity: 1 })
-      ).then((data) => {
-        if (data?.payload) {
-          dispatch(fetchCartItems(currentUser._id));
-          toast.success("Book added to cart");
-        }
-      });
-    } else {
-      toast.error("Out of stock");
+    const existingItem = cartItems.items.find(
+      (item) => item.bookId === book._id
+    );
+    if (existingItem && existingItem.quantity + 1 > book.stock) {
+      toast.error("You have reached the stock limit");
+      return;
     }
+    dispatch(
+      addToCart({ userId: currentUser._id, bookId: book._id, quantity: 1 })
+    ).then((data) => {
+      if (data?.payload) {
+        dispatch(fetchCartItems(currentUser._id));
+        toast.success("Book added to cart");
+      }
+    });
   };
 
   const handleWishlist = async () => {
@@ -241,44 +236,18 @@ export default function PostPage() {
       </nav>
       <div className=" p-8 rounded-lg shadow-lg flex flex-col md:flex-row dark:bg-gray-800">
         <div className="max-w-md mx-auto p-8">
-          <Carousel
-            axis="horizontal"
-            autoPlay={true}
-            interval={3000}
-            swipeable={true}
-            dynamicHeight={true}
-            centerMode={true}
-            centerSlidePercentage={80}
-            showArrows={true}
-            showIndicators={true}
-            showStatus={false}
-            showThumbs={false}
-            transitionTime={1000}
-            width="100%"
-          >
+          <Slider {...settings}>
             {book.images.map((image, index) => (
               <div key={index} className="inline-block w-80 h-80">
                 <img
                   src={image}
                   alt={`Slide ${index + 1}`}
-                  className="object-contain w-full h-full rounded-lg"
-                  onClick={() => handleImageClick(index)}
+                  className="object-contain w-full h-full rounded-lg cursor-pointer"
+                  onClick={() => handleImageClick(image)} // Open modal on click
                 />
               </div>
             ))}
-          </Carousel>
-          {lightbox.isOpen && (
-            <Lightbox
-              images={lightbox.images.map((image) => ({ src: image }))}
-              open={lightbox.isOpen}
-              index={lightbox.startIndex}
-              close={() => setLightbox({ ...lightbox, isOpen: false })}
-              clickOutside={() => setLightbox({ ...lightbox, isOpen: false })}
-              clickImage={() => console.log("image")}
-              clickPrev={() => console.log("prev")}
-              clickNext={() => console.log("next")}
-            />
-          )}
+          </Slider>
         </div>
         <div className="mt-10 md:mt-0 md:ml-8 flex-grow">
           <h1 className="text-3xl font-bold mb-2 dark:text-gray-100">
@@ -297,7 +266,7 @@ export default function PostPage() {
             <span className="font-bold">{listedBy && listedBy.username}</span>
           </p>
           <p className="text-gray-600 mb-2 dark:text-gray-100">
-            Categories: <span className="font-bold">{category}</span>
+            Categories: <span className="font-bold">{book.category.name}</span>
           </p>
           <p className="text-gray-600 mb-2 dark:text-gray-100">
             Publisher: <span className="font-bold">{book.publisher}</span>
@@ -313,16 +282,23 @@ export default function PostPage() {
             Condition: <span className="font-bold">{book.Condition}</span>
           </p>
           <p className="text-gray-600 mb-2 dark:text-gray-100">
-            Stock: <span className="font-bold">{book.stock}</span>
+            Stock:{" "}
+            <span className="font-bold">
+              {book.stock > 0 ? book.stock : "Out of stock"}
+            </span>
           </p>
 
           <div className="flex space-x-4">
-            <Button className="bg-red-500 text-white px-6 py-2 rounded-lg">
+            <Button
+              className="bg-red-500 text-white px-6 py-2 rounded-lg"
+              disabled={book.stock === 0}
+            >
               Buy Now
             </Button>
             <Button
               onClick={handleAddToCart}
               className="bg-red-500 text-white px-6 py-2 rounded-lg"
+              disabled={book.stock === 0}
             >
               Add To Cart
             </Button>
@@ -361,6 +337,29 @@ export default function PostPage() {
             </div>
           ))}
         </div>
+        {/* Modal for zoomed image */}
+        <Modal
+          isOpen={isOpen}
+          onRequestClose={closeModal}
+          shouldCloseOnOverlayClick={true}
+          contentLabel="Zoomed Image"
+          className="flex justify-center items-center h-full"
+          overlayClassName="fixed inset-0 bg-black bg-opacity-75 z-50"
+        >
+          <div className="relative">
+            <button
+              className="absolute top-2 right-2 text-white text-2xl"
+              onClick={closeModal}
+            >
+              &times;
+            </button>
+            <img
+              src={selectedImage}
+              alt="Zoomed"
+              className="max-h-screen max-w-screen object-contain"
+            />
+          </div>
+        </Modal>
       </div>
     </main>
   );
