@@ -18,6 +18,7 @@ import Wishlist from "./pages/Wishlist";
 import CartPage from "./components/Cart";
 import CheckOut from "./pages/CheckOut";
 import OrderSuccess from "./pages/OrderSuccess";
+import PasswordReset from "./components/PasswordReset";
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
             </LoginProtected>
           }
         />
+        <Route path="/reset-password" element={<PasswordReset />} />
         <Route path="/books" element={<Search />} />
         <Route path="/book/:bookSlug" element={<PostPage />} />
         <Route element={<PrivateRoute />}>

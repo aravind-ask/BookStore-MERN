@@ -1,5 +1,12 @@
-import { Alert, Button, Label, Modal, Spinner, TextInput } from "flowbite-react";
-import { useState } from "react";
+import {
+  Alert,
+  Button,
+  Label,
+  Modal,
+  Spinner,
+  TextInput,
+} from "flowbite-react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -14,11 +21,28 @@ export default function SignIn() {
   const [otp, setOtp] = useState(""); // add otp state
   const [showModal, setShowModal] = useState(false); // add modal state
   const { loading, error: errorMessage } = useSelector((state) => state.user);
+  const [timer, setTimer] = useState(300); // 5 minutes in seconds
+  const [canResend, setCanResend] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
   };
+
+  useEffect(() => {
+    let interval;
+    if (showModal && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prevTimer) => prevTimer - 1);
+      }, 1000);
+    } else if (timer === 0) {
+      setCanResend(true);
+    }
+    return () => clearInterval(interval);
+  }, [showModal, timer]);
+
+
 
   const handleSubmit = async (e, isDemo = false, demoData = null) => {
     if (e) {
@@ -35,7 +59,7 @@ export default function SignIn() {
         body: JSON.stringify(isDemo ? demoData : formData),
       });
       const data = await res.json();
-      console.log(data)
+      console.log(data);
       if (data.success === false) {
         if (data.message === "Please verify your account first") {
           setShowModal(true); // show modal to enter OTP
@@ -73,6 +97,26 @@ export default function SignIn() {
     }
   };
 
+  
+
+  const handleResendOtp = async () => {
+    try {
+      const res = await fetch("/api/auth/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTimer(300);
+        setCanResend(false);
+      } else {
+        dispatch(signInFailure(data.message));
+      }
+    } catch (error) {
+      dispatch(signInFailure(error.message));
+    }
+  };
 
   const handleDemoLogin = () => {
     handleSubmit(null, true, {
@@ -146,6 +190,12 @@ export default function SignIn() {
               Sign Up
             </Link>
           </div>
+          <div className="flex gap-2 text-sm mt-5">
+            <span>Forgot Password??</span>
+            <Link to="/reset-password" className="text-blue-500">
+              Reset
+            </Link>
+          </div>
           {errorMessage && (
             <Alert className="mt-5" color="failure">
               {errorMessage}
@@ -173,12 +223,19 @@ export default function SignIn() {
           value={otp}
           onChange={(e) => setOtp(e.target.value.trim())}
         />
+        <p>
+          Time remaining: {Math.floor(timer / 60)}:
+          {(timer % 60).toString().padStart(2, "0")}
+        </p>
         <Button
           gradientDuoTone="purpleToPink"
           onClick={handleVerifyOtp}
           disabled={otp.length !== 6}
         >
           Verify OTP
+        </Button>
+        <Button onClick={handleResendOtp} disabled={!canResend}>
+          Resend OTP
         </Button>
       </Modal>
     </div>

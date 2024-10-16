@@ -52,6 +52,7 @@ export const signup = async (req, res, next) => {
 
     const hashedPassword = await bcryptjs.hashSync(password, 10);
     const otp = Math.floor(100000 + Math.random() * 900000);
+    const otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
     const send = await sendOtp(email, otp);
     if (send.message !== "success") {
       return next(errorHandler(400, "Error Sending OTP"));
@@ -62,6 +63,7 @@ export const signup = async (req, res, next) => {
       email,
       password: hashedPassword,
       otp,
+      otpExpiration,
     });
     await newUser.save();
     res.json("Otp send, Please verify");
@@ -76,12 +78,16 @@ export const verifyOtp = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User  not found" });
+      return next(errorHandler(404, "User not found"));
+    }
+    if (user.otpExpiration < new Date()) {
+      return next(errorHandler(400, "OTP has expired"));
     }
     if (user.otp !== otp) {
-      return res.status(401).json({ message: "Invalid OTP" });
+      return next(errorHandler(400, "Invalid OTP"));
     }
     user.otp = null;
+    user.otpExpiration = null;
     user.isVerified = true;
     await user.save();
     const token = jwt.sign(
@@ -97,9 +103,31 @@ export const verifyOtp = async (req, res) => {
       .json(rest);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Internal Server Error" });
+    next(error);
   }
 };
+
+export const resendOtp = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return next(errorHandler(404, "User not found"));
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const send = await sendOtp(email, otp);
+    if (send.message !== "success") {
+      return next(errorHandler(400, "Error Sending OTP"));
+    }
+    user.otp = otp;
+    user.otpExpiration = new Date(Date.now() + 5 * 60 * 1000);
+    await user.save();
+    res.json({ success: true, message: "OTP resent successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 export const signin = async (req, res, next) => {
   const { email, password } = req.body;
@@ -148,6 +176,51 @@ export const signin = async (req, res, next) => {
       })
       .json(rest);
   } catch (error) {
+    next(error);
+  }
+};
+
+export const forgotPassword = async (req, res, next) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return next(errorHandler(404, "User not found"));
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const send = await sendOtp(email, otp);
+    if (send.message !== "success") {
+      return next(errorHandler(400, "Error Sending OTP"));
+    }
+    user.otp = otp;
+    user.otpExpiration = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    await user.save();
+    res.json({ success: true, message: "OTP sent successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+export const resetPassword = async (req, res, next) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    const user = await User.findOne({
+      email,
+      otp,
+      otpExpiration: { $gt: Date.now() },
+    });
+    if (!user) {
+      return next(errorHandler(400, "Invalid or expired OTP"));
+    }
+    const hashedPassword = bcryptjs.hashSync(newPassword, 10);
+    user.password = hashedPassword;
+    user.otp = null;
+    user.otpExpiration = null;
+    await user.save();
+    res.json({ success: true, message: "Password reset successfully" });
+  } catch (error) {
+    console.log(error);
     next(error);
   }
 };
