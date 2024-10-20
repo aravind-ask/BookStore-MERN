@@ -76,7 +76,6 @@ export default function DashProfile() {
       },
       (error) => {
         setImageFileUploadError(
-          
           "Could not upload image (File must be less than 2MB)"
         );
         setImageFileUploadProgress(null);
@@ -230,12 +229,12 @@ export default function DashProfile() {
           defaultValue={currentUser.email}
           onChange={handleChange}
         />
-        <TextInput
+        {/* <TextInput
           type="password"
           id="password"
           placeholder="password"
           onChange={handleChange}
-        />
+        /> */}
         <Button
           type="submit"
           gradientDuoTone="purpleToBlue"
@@ -255,6 +254,9 @@ export default function DashProfile() {
         </Link>
       </form>
       <div className="text-red-500 flex justify-between mt-5">
+        <Link to={"/reset-password"}>
+          <span className="cursor-pointer">Reset Password</span>
+        </Link>
         <span onClick={() => setShowModal(true)} className="cursor-pointer">
           Delete Account
         </span>

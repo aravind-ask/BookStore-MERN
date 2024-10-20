@@ -9,7 +9,7 @@ const sendOtp = async (email, otp) => {
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
-      secure: false, // or 'STARTTLS'
+      secure: false,
       auth: {
         user: "rebook.auth.369@gmail.com",
         pass: "lfpy hlrj fyrc cyjd",
@@ -152,6 +152,8 @@ export const signin = async (req, res, next) => {
     if (!validUser.isVerified) {
       const otp = Math.floor(100000 + Math.random() * 900000);
       await sendOtp(email, otp);
+      validUser.otp = otp;
+      await validUser.save()
       return res
         .status(401)
         .json({ success: false, message: "Please verify your account first" });

@@ -19,13 +19,14 @@ import { CartItems } from "../components/CartItems";
 import { Button, Modal } from "flowbite-react";
 import { AiOutlineEdit } from "react-icons/ai";
 import { clearCart } from "../redux/cart/cartSlice";
+import { createNewOrder } from "../redux/order/orderSlice";
 
 const CheckoutPage = () => {
   const location = useLocation();
   const cartItems = location.state?.cartItems;
 
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("cash_on_delivery");
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [orderSummary, setOrderSummary] = useState({});
   const { currentUser } = useSelector((state) => state.user);
   const { addressList } = useSelector((state) => state.address);
@@ -42,11 +43,12 @@ const CheckoutPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [addressToEdit, setAddressToEdit] = useState({});
   const [error, setError] = useState("");
+  const [paymentStart, setPayamentStart] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  console.log("prp", cartItems.items);
+  console.log("prp", cartItems);
 
   useEffect(() => {
     dispatch(fetchAddress(currentUser._id));
@@ -62,28 +64,98 @@ const CheckoutPage = () => {
     console.log(paymentMethod);
   };
 
-  const handlePlaceOrder = async () => {
-    if (paymentMethod === "cash_on_delivery") {
-      try {
-        const response = await axios.post("/api/order/checkout", {
-          cartItems,
-          selectedAddress,
-          paymentMethod,
-          orderSummary,
-        });
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+      document.body.appendChild(script);
+    });
+  };
 
-        if (response.status === 200) {
-          dispatch(clearCart(currentUser._id));
-          navigate("/order-success");
-          console.log("Order placed successfully");
-        } else {
-          setError("Error placing order");
+  useEffect(() => {
+    loadRazorpayScript();
+  }, []);
+
+  const handlePlaceOrder = async () => {
+    const orderData = {
+      cartItems,
+      selectedAddress,
+      paymentMethod,
+      orderSummary,
+    };
+    console.log("Order Data", orderData);
+
+    try {
+      const response = await dispatch(createNewOrder(orderData));
+
+      if (paymentMethod === "Razorpay") {
+        if (typeof window.Razorpay === "undefined") {
+          await loadRazorpayScript();
         }
-      } catch (error) {
-        setError("Error placing order");
+
+        if (typeof window.Razorpay === "undefined") {
+          setError("Razorpay SDK failed to load");
+          return;
+        }
+
+        const options = {
+          key: response.payload.key,
+          amount: response.payload.order.amount,
+          currency: "INR",
+          name: "Book Store",
+          description: "Book Store Order",
+          image: "https://example.com/logo.png",
+          order_id: response.payload.order.id,
+          handler: async function (response) {
+            try {
+              const verifyResponse = await axios.post(
+                "/api/order/verify-payment",
+                {
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }
+              );
+
+              if (
+                verifyResponse.data.message === "Payment verified successfully"
+              ) {
+                dispatch(clearCart(currentUser._id));
+                navigate("/order-success");
+              } else {
+                setError("Payment verification failed");
+              }
+            } catch (error) {
+              console.error("Payment verification error:", error);
+              setError("Payment verification failed");
+            }
+          },
+          prefill: {
+            name: currentUser.name,
+            email: currentUser.email,
+            contact: selectedAddress.phone,
+          },
+          theme: {
+            color: "#3399cc",
+          },
+        };
+
+        const rzp1 = new window.Razorpay(options);
+        rzp1.open();
+      } else if (paymentMethod === "COD") {
+        // Handle Cash on Delivery
+        dispatch(clearCart(currentUser._id));
+        navigate("/order-success");
       }
-    } else {
-      setError("Invalid payment method");
+    } catch (error) {
+      console.error(error);
+      setError("Error placing order");
     }
   };
 
@@ -237,13 +309,26 @@ const CheckoutPage = () => {
             <input
               type="radio"
               name="paymentMethod"
-              value="cash_on_delivery"
+              value="COD"
               //   checked={paymentMethod === "cash_on_delivery"}
-              onClick={() => handlePaymentMethodChange("cash_on_delivery")}
+              onClick={() => handlePaymentMethodChange("COD")}
             />
             <div className="flex items-center">
               <FontAwesomeIcon icon={faMoneyBill} size="lg" />
               <span className="ml-2">Cash on Delivery</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-5 w-full md:w-1/2 xl:w-1/3 p-4 mb-4">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="Paypal"
+              //   checked={paymentMethod === "cash_on_delivery"}
+              onClick={() => handlePaymentMethodChange("Razorpay")}
+            />
+            <div className="flex items-center">
+              <FontAwesomeIcon icon={faMoneyBill} size="lg" />
+              <span className="ml-2">Paypal</span>
             </div>
           </div>
           {/* Add more payment methods here */}

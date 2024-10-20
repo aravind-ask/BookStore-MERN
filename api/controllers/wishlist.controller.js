@@ -4,7 +4,7 @@ import { errorHandler } from "../utils/error.js";
 export const addToWishlist = async (req, res, next) => {
   try {
     const { bookId, userId, title, userName, price, images, slug, author } = req.body;
-    const existing = await Wishlist.findOne({ bookId, userId }); // Find a document with matching bookId and userId
+    const existing = await Wishlist.findOne({ bookId, userId });
     if (existing) {
       return errorHandler(400, "Book already in wishlist");
     }
@@ -18,8 +18,8 @@ export const addToWishlist = async (req, res, next) => {
       slug,
       author
     });
-    await newWishlist.save(); // Await the promise returned by save()
-    res.status(201).json("Book added to wishlist"); // Use 201 Created instead of 200 OK
+    await newWishlist.save();
+    res.status(201).json("Book added to wishlist"); 
   } catch (error) {
     console.log(error);
     next(error);

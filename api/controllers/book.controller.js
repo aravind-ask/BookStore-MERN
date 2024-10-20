@@ -33,7 +33,7 @@ export const addBook = async (req, res, next) => {
   ) {
     return next(errorHandler(400, "All fields are required"));
   }
-  
+
   const slug = req.body.title
     .split(" ")
     .join("-")
@@ -64,9 +64,10 @@ export const addBook = async (req, res, next) => {
 
 export const getBooks = async (req, res, next) => {
   try {
-    const startIndex = parseInt(req.query.startIndex) || 0;
+    const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 9;
-    const sortDirection = req.query.order === "asc" ? 1 : -1;
+    const skip = (page - 1) * limit;
+
     let filter = {};
 
     if (req.query.isAdmin === "true") {
@@ -101,16 +102,16 @@ export const getBooks = async (req, res, next) => {
         isListed: true, // Only show non-deleted books for regular users
       };
     }
+
     const books = await Book.find(filter)
-      .sort({ updatedAt: sortDirection })
-      .skip(startIndex)
+      .sort({ updatedAt: -1 })
+      .skip(skip)
       .limit(limit)
       .populate("category");
 
-    const totalBooks = await Book.countDocuments();
+    const totalBooks = await Book.countDocuments(filter);
 
     const now = new Date();
-
     const oneMonthAgo = new Date(
       now.getFullYear(),
       now.getMonth() - 1,
@@ -118,6 +119,7 @@ export const getBooks = async (req, res, next) => {
     );
 
     const lastMonthBooks = await Book.countDocuments({
+      ...filter,
       createdAt: { $gte: oneMonthAgo },
     });
 
@@ -125,6 +127,8 @@ export const getBooks = async (req, res, next) => {
       books,
       totalBooks,
       lastMonthBooks,
+      currentPage: page,
+      totalPages: Math.ceil(totalBooks / limit),
     });
   } catch (error) {
     next(error);

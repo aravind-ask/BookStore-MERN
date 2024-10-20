@@ -1,168 +1,321 @@
-import { Modal, Table, Button } from "flowbite-react";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
-import { HiOutlineExclamationCircle } from "react-icons/hi";
-import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import {
-  addNewAddress,
-  deleteAddress,
-  editAddress,
-  fetchAddress,
-} from "../redux/address/addressSlice";
+  Alert,
+  Button,
+  FileInput,
+  Select,
+  Textarea,
+  TextInput,
+} from "flowbite-react";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
+import { app } from "../firebase";
+import { useEffect, useState } from "react";
+import { CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
+import { useNavigate } from "react-router-dom";
+import Cropper from "react-cropper";
+import "cropperjs/dist/cropper.css"; // Make sure to import cropper styles
 
-export default function Addresses() {
-  const dispatch = useDispatch();
-  const { addressList, isLoading } = useSelector((state) => state.address);
-  const { currentUser } = useSelector((state) => state.auth);
-  const [newAddress, setNewAddress] = useState({
-    street: "",
-    city: "",
-    state: "",
-    zip: "",
-    country: "",
-  });
-  const [addressIdToDelete, setAddressIdToDelete] = useState("");
-  const [showModal, setShowModal] = useState(false);
+export default function CreatePost() {
+  const [files, setFiles] = useState(null);
+  const [imageUploadProgress, setImageUploadProgress] = useState(null);
+  const [imageUploadError, setImageUploadError] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [publishError, setPublishError] = useState(null);
+  const [validationError, setValidationError] = useState(null);
+  const [categories, setCategories] = useState([]);
+
+  const [cropper, setCropper] = useState(null);
+  const [croppedImage, setCroppedImage] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(fetchAddress(currentUser._id));
-  }, [dispatch, currentUser._id]);
+    fetchCategories();
+  }, []);
 
-  const handleAddNewAddress = async () => {
+  const fetchCategories = async () => {
     try {
-      await dispatch(addNewAddress(newAddress));
-      setNewAddress({
-        street: "",
-        city: "",
-        state: "",
-        zip: "",
-        country: "",
+      const response = await fetch("/api/category/get-categories");
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Handle Upload and Image Cropping
+  const handleUploadImages = async () => {
+    try {
+      if (!croppedImage) {
+        setImageUploadError("Please crop the image before uploading.");
+        return;
+      }
+
+      setImageUploadError(null);
+      const storage = getStorage(app);
+      const images = [];
+      const fileName = new Date().getTime() + "-" + selectedFile.name; // unique file name
+      const storageRef = ref(storage, fileName);
+      const uploadTask = uploadBytesResumable(
+        storageRef,
+        dataURLToBlob(croppedImage)
+      );
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setImageUploadProgress(progress.toFixed(0));
+        },
+        (error) => {
+          console.log(error);
+          setImageUploadError("Image upload failed");
+          setImageUploadProgress(null);
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            images.push(downloadURL);
+
+            if (images.length === 1) {
+              setImageUploadProgress(null);
+              setImageUploadError(null);
+              setFormData({ ...formData, images });
+            }
+          });
+        }
+      );
+    } catch (error) {
+      setImageUploadError("Image upload failed");
+      setImageUploadProgress(null);
+      console.log(error);
+    }
+  };
+
+  // Handle image cropping
+  const handleCrop = () => {
+    if (cropper) {
+      const croppedDataUrl = cropper.getCroppedCanvas().toDataURL();
+      setCroppedImage(croppedDataUrl);
+    }
+  };
+
+  // Convert dataURL to Blob for uploading
+  const dataURLToBlob = (dataURL) => {
+    const arr = dataURL.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const defaultImageUrls = [
+        "https://firebasestorage.googleapis.com/v0/b/rebook-mern.appspot.com/o/1728369326265-sample-sd.jpg?alt=media&token=37523efe-507b-484e-9a80-75e14dee9ada",
+        "https://firebasestorage.googleapis.com/v0/b/rebook-mern.appspot.com/o/1728369326265-sample-sd.jpg?alt=media&token=37523efe-507b-484e-9a80-75e14dee9ada",
+        "https://firebasestorage.googleapis.com/v0/b/rebook-mern.appspot.com/o/1728369326265-sample-sd.jpg?alt=media&token=37523efe-507b-484e-9a80-75e14dee9ada",
+        "https://firebasestorage.googleapis.com/v0/b/rebook-mern.appspot.com/o/1728369326265-sample-sd.jpg?alt=media&token=37523efe-507b-484e-9a80-75e14dee9ada",
+      ];
+      const imagesArray = [
+        ...formData.images,
+        ...defaultImageUrls.slice(0, 5 - formData.images.length),
+      ];
+      const res = await fetch("/api/books/add-book", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...formData, images: imagesArray }),
       });
+      const data = await res.json();
+      if (!res.ok) {
+        setPublishError(data.message);
+        return;
+      }
+
+      if (res.ok) {
+        setPublishError(null);
+        navigate(`/`);
+      }
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
+      setPublishError("Something went wrong");
     }
   };
 
-  const handleEditAddress = async (addressId) => {
-    try {
-      await dispatch(editAddress(currentUser._id, addressId, newAddress));
-      setNewAddress({
-        street: "",
-        city: "",
-        state: "",
-        zip: "",
-        country: "",
-      });
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
-
-  const handleDeleteAddress = async () => {
-    setShowModal(false);
-    try {
-      await dispatch(deleteAddress(currentUser._id, addressIdToDelete));
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
   return (
-    <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
-      {addressList.length > 0 ? (
-        <>
-          <Table hoverable className="shadow-md">
-            <Table.Head>
-              <Table.HeadCell>Street</Table.HeadCell>
-              <Table.HeadCell>City</Table.HeadCell>
-              <Table.HeadCell>State</Table.HeadCell>
-              <Table.HeadCell>Zip</Table.HeadCell>
-              <Table.HeadCell>Country</Table.HeadCell>
-              <Table.HeadCell>
-                <span>Edit</span>
-              </Table.HeadCell>
-              <Table.HeadCell>
-                <span>Delete</span>
-              </Table.HeadCell>
-            </Table.Head>
-            {addressList.map((address) => (
-              <Table.Body key={address._id} className="divide-y">
-                <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                  <Table.Cell>{address.street}</Table.Cell>
-                  <Table.Cell>{address.city}</Table.Cell>
-                  <Table.Cell>{address.state}</Table.Cell>
-                  <Table.Cell>{address.zip}</Table.Cell>
-                  <Table.Cell>{address.country}</Table.Cell>
-                  <Table.Cell>
-                    <Link
-                      className="text-teal-500 hover:underline"
-                      to={`/update-address/${address._id}`}
-                    >
-                      <AiOutlineEdit className="h-5 w-5" />
-                    </Link>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <span
-                      onClick={() => {
-                        setShowModal(true);
-                        setAddressIdToDelete(address._id);
-                      }}
-                      className="text-red-500 hover:underline cursor-pointer"
-                    >
-                      <AiOutlineDelete className="h-5 w-5" />
-                    </span>
-                  </Table.Cell>
-                </Table.Row>
-              </Table.Body>
-            ))}
-          </Table>
-          <Modal
-            show={showModal}
-            onClose={() => setShowModal(false)}
-            popup
-            size="md"
-          >
-            <Modal.Header />
-            <Modal.Body>
-              <div className="text-center">
-                <HiOutlineExclamationCircle className="h-14 w-14 text-gray-400 dark:text-gray-200 mb-4 mx-auto" />
-                <h3 className="text-lg font-normal text-gray-500 dark:text-gray-400">
-                  Are you sure you want to delete this address?
-                </h3>
-                <div className="flex justify-center gap-4 mt-4">
-                  <Button
-                    color="failure"
-                    onClick={handleDeleteAddress}
-                    className="w-full"
-                  >
-                    Delete
-                  </Button>
-                  <Button
-                    color="gray"
-                    onClick={() => setShowModal(false)}
-                    className="w-full"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </Modal.Body>
-          </Modal>
-        </>
-      ) : (
-        <p className="text-center text-gray-500 dark:text-gray-400">
-          No addresses found.
-        </p>
-      )}
-      <div className="flex justify-center mt-4">
-        <Button
-          color="success"
-          onClick={handleAddNewAddress}
-          className="w-full"
-        >
-          Add New Address
-        </Button>
+    <div className="p-3 max-w-3xl mx-auto min-h-screen">
+      <h1 className="text-center text-3xl my-7 font-semibold">List a Book</h1>
+      <div>
+        {publishError && (
+          <Alert className="mt-5" color="failure">
+            {publishError}
+          </Alert>
+        )}
       </div>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <div className="flex flex-col gap-4 sm:flex-row justify-between">
+          <TextInput
+            type="text"
+            placeholder="Title"
+            required
+            id="title"
+            className="flex-1"
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
+          />
+          <Select
+            onChange={(e) =>
+              setFormData({ ...formData, category: e.target.value })
+            }
+          >
+            <option value="uncategorized">Select a category</option>
+            {categories.map((category) => (
+              <option key={category._id} value={category._id}>
+                {category.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+        {/* Existing form components */}
+
+        {/* Image Upload and Cropper */}
+        <div className="flex gap-4 items-center justify-between border-4 border-teal-500 border-dotted p-3">
+          <FileInput
+            id="images"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setSelectedFile(e.target.files[0])}
+          />
+        </div>
+        {selectedFile && (
+          <div className="mt-5">
+            <Cropper
+              src={URL.createObjectURL(selectedFile)}
+              style={{ height: 400, width: "100%" }}
+              aspectRatio={1}
+              guides={true}
+              crop={handleCrop}
+              ref={(cropper) => setCropper(cropper)}
+            />
+            <button type="button" onClick={handleCrop}>
+              Crop Image
+            </button>
+          </div>
+        )}
+
+        {/* Cropped Image Preview */}
+        {croppedImage && (
+          <div className="mt-5">
+            <h3>Cropped Image Preview:</h3>
+            <img src={croppedImage} alt="Cropped" style={{ width: 200 }} />
+            <Button onClick={handleUploadImages}>Upload Cropped Image</Button>
+          </div>
+        )}
+        <div className="flex flex-col gap-4 sm:flex-row justify-between">
+          <TextInput
+            type="text"
+            placeholder="Author"
+            required
+            id="author"
+            className="flex-1"
+            onChange={(e) =>
+              setFormData({ ...formData, author: e.target.value })
+            }
+          />
+          <TextInput
+            type="text"
+            placeholder="Publisher"
+            required
+            id="publisher"
+            className="flex-1"
+            onChange={(e) =>
+              setFormData({ ...formData, publisher: e.target.value })
+            }
+          />
+          <Select
+            onChange={(e) =>
+              setFormData({ ...formData, condition: e.target.value })
+            }
+          >
+            <option value="uncategorized">Condition</option>
+            <option value="New">New</option>
+            <option value="Used">Used</option>
+            <option value="Good">Good</option>
+            <option value="Average">Average</option>
+            <option value="Worst">Worst</option>
+          </Select>
+        </div>
+        {validationError && (
+          <Alert className="mt-5" color="failure">
+            {validationError}
+          </Alert>
+        )}
+        <div className="flex flex-col gap-4 sm:flex-row justify-between">
+          <TextInput
+            type="text"
+            placeholder="Price"
+            required
+            id="price"
+            className="flex-1"
+            onChange={(e) => {
+              const value = e.target.value;
+              if (!/^\d+$/.test(value)) {
+                setValidationError("Please enter a valid number");
+                setFormData({ ...formData, price: "" });
+              } else {
+                setValidationError(null);
+                setFormData({ ...formData, price: value });
+              }
+            }}
+          />
+          <TextInput
+            type="text"
+            placeholder="Stock"
+            required
+            id="stock"
+            className="flex-1"
+            onChange={(e) => {
+              const value = e.target.value;
+              if (!/^\d+$/.test(value)) {
+                setValidationError("Please enter a valid number");
+                setFormData({ ...formData, stock: "" });
+              } else {
+                setValidationError(null);
+                setFormData({ ...formData, stock: value });
+              }
+            }}
+          />
+        </div>
+        <Textarea
+          id="description"
+          placeholder="Description"
+          required
+          rows={8}
+          onChange={(e) =>
+            setFormData({ ...formData, description: e.target.value })
+          }
+          value={formData.description || ""}
+        />
+
+        {/* Form submission */}
+        <Button type="submit" gradientDuoTone="purpleToPink">
+          Publish
+        </Button>
+      </form>
     </div>
   );
 }

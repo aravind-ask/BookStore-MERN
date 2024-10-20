@@ -1,6 +1,16 @@
 import Book from "../models/books.model.js";
 import Order from "../models/order.model.js";
 import { errorHandler } from "../utils/error.js";
+import Razorpay from "razorpay";
+import crypto from "crypto";
+import dotenv from "dotenv";
+dotenv.config();
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 export const placeOrder = async (req, res, next) => {
   try {
@@ -25,7 +35,7 @@ export const placeOrder = async (req, res, next) => {
       );
     }
 
-    if (paymentMethod === "cash_on_delivery") {
+    if (paymentMethod === "COD") {
       const orderNumber = generateOrderNumber(); // generate a unique order number
       const order = new Order({
         orderNumber,
@@ -55,6 +65,40 @@ export const placeOrder = async (req, res, next) => {
 
       await order.save();
       res.json({ message: "Order placed successfully" });
+    } else if (paymentMethod === "Razorpay") {
+      const options = {
+        amount: orderSummary.total * 100, // Razorpay expects amount in paise
+        currency: "INR",
+        receipt: generateOrderNumber(),
+        payment_capture: 1,
+      };
+
+      const razorpayOrder = await razorpay.orders.create(options);
+
+      // Create order in your database
+      const newOrder = new Order({
+        orderNumber: razorpayOrder.receipt,
+        userId: req.user.id,
+        user: req.user.name,
+        cartItems: cartItems.items.map((item) => ({
+          bookId: item.bookId,
+          quantity: item.quantity,
+        })),
+        address: selectedAddress,
+        paymentMethod,
+        razorpayOrderId: razorpayOrder.id,
+        paymentStatus: "pending",
+        orderSummary: orderSummary,
+      });
+
+      await newOrder.save();
+
+      res.status(201).json({
+        success: true,
+        order: razorpayOrder,
+        orderId: newOrder._id,
+        key: process.env.RAZORPAY_KEY_ID,
+      });
     } else {
       return next(errorHandler(400, "Invalid payment method"));
     }
@@ -64,6 +108,33 @@ export const placeOrder = async (req, res, next) => {
   }
 };
 
+export const verifyPayment = async (req, res, next) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      req.body;
+
+    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(sign.toString())
+      .digest("hex");
+
+    if (razorpay_signature === expectedSign) {
+      // Payment is successful, update the order
+      await Order.findOneAndUpdate(
+        { razorpayOrderId: razorpay_order_id },
+        { paymentStatus: "success", razorpayPaymentId: razorpay_payment_id }
+      );
+
+      return res.status(200).json({ message: "Payment verified successfully" });
+    } else {
+      return res.status(400).json({ message: "Invalid signature sent!" });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 
 export const getOrders = async (req, res, next) => {
   try {
@@ -97,7 +168,6 @@ function generateOrderNumber() {
 
   return `ORD-${year}${month}${day}${hour}${minute}${second}${random}`;
 }
-
 
 // Update order item status
 export const updateOrderItemStatus = async (req, res, next) => {

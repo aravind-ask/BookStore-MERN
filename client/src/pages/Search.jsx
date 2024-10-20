@@ -1,4 +1,10 @@
-import { Button, Select, TextInput } from "flowbite-react";
+import {
+  Button,
+  Select,
+  TextInput,
+  ToggleSwitch,
+  Pagination,
+} from "flowbite-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BookCard from "../components/BookCard";
@@ -10,10 +16,14 @@ export default function Search() {
     category: "uncategorized",
   });
 
+  const [showOutOfStock, setShowOutOfStock] = useState(true); // default: show out-of-stock products
+
   console.log(sidebarData);
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showMore, setShowMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const booksPerPage = 9;
 
   const location = useLocation();
 
@@ -36,24 +46,43 @@ export default function Search() {
     const fetchPosts = async () => {
       setLoading(true);
       const searchQuery = urlParams.toString();
-      const res = await fetch(`/api/books/getbooks?${searchQuery}`);
+      const res = await fetch(
+        `/api/books/getbooks?${searchQuery}&page=${currentPage}&limit=${booksPerPage}`
+      );
       if (!res.ok) {
         setLoading(false);
         return;
       }
       if (res.ok) {
         const data = await res.json();
-        setBooks(data.books);
-        setLoading(false);
-        if (data.books.length === 9) {
-          setShowMore(true);
-        } else {
-          setShowMore(false);
+        const filteredBooks = data.books.filter(
+          (book) => showOutOfStock || book.stock > 0
+        );
+
+        if (sidebarData.sort === "priceAsc") {
+          filteredBooks.sort((a, b) => a.price - b.price);
+        } else if (sidebarData.sort === "priceDesc") {
+          filteredBooks.sort((a, b) => b.price - a.price);
+        } else if (sidebarData.sort === "aA") {
+          filteredBooks.sort((a, b) =>
+            a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+          );
+        } else if (sidebarData.sort === "zZ") {
+          filteredBooks.sort((a, b) =>
+            b.title.localeCompare(a.title, undefined, { sensitivity: "base" })
+          );
         }
+        setTotalPages(Math.ceil(data.totalBooks / booksPerPage));
+        setBooks(filteredBooks);
+        setLoading(false);
       }
     };
     fetchPosts();
-  }, [location.search]);
+  }, [location.search, showOutOfStock, currentPage]);
+
+  const onPageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const handleChange = (e) => {
     if (e.target.id === "searchTerm") {
@@ -74,32 +103,15 @@ export default function Search() {
     const urlParams = new URLSearchParams(location.search);
     urlParams.set("searchTerm", sidebarData.searchTerm);
     urlParams.set("sort", sidebarData.sort);
-    urlParams.set("category", sidebarData.category);
+    // urlParams.set("category", sidebarData.category);
+    urlParams.set("showOutOfStock", showOutOfStock);
     const searchQuery = urlParams.toString();
     navigate(`/books?${searchQuery}`);
   };
 
-  const handleShowMore = async () => {
-    const numberOfPosts = books.length;
-    const startIndex = numberOfPosts;
-    const urlParams = new URLSearchParams(location.search);
-    urlParams.set("startIndex", startIndex);
-    const searchQuery = urlParams.toString();
-    const res = await fetch(`/api/books/getbooks?${searchQuery}`);
-    if (!res.ok) {
-      return;
-    }
-    if (res.ok) {
-      const data = await res.json();
-      setBooks([...books, ...data.books]);
-      if (data.books.length === 9) {
-        setShowMore(true);
-      } else {
-        setShowMore(false);
-      }
-    }
+  const handleToggle = () => {
+    setShowOutOfStock(!showOutOfStock);
   };
-
   return (
     <div className="flex flex-col md:flex-row">
       <div className="p-7 border-b md:border-r md:min-h-screen border-gray-500">
@@ -121,20 +133,33 @@ export default function Search() {
             <Select onChange={handleChange} value={sidebarData.sort} id="sort">
               <option value="desc">Latest</option>
               <option value="asc">Oldest</option>
+              <option value="priceAsc">Price: Low to High</option>
+              <option value="priceDesc">Price: High to Low</option>
+              <option value="aA">A-Z</option>
+              <option value="zZ">Z-A</option>
             </Select>
           </div>
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <label className="font-semibold">Category:</label>
             <Select
               onChange={handleChange}
               value={sidebarData.category}
               id="category"
             >
-              <option value="uncategorized">Uncategorized</option>
-              <option value="fiction">Fiction</option>
-              <option value="nonfiction">Non-Fiction</option>
-              <option value="academic">Academic</option>
+              <option value="Novels">Novels</option>
+              <option value="Comics">Comics</option>
+              <option value="Academic Textbooks">Academic Textbooks</option>
+              <option value="Magazines">Magazines</option>
+              <option value="Cookbooks">Cookbooks</option>
             </Select>
+          </div> */}
+          <div className="flex items-center gap-2">
+            <label className="font-semibold">Show out-of-stock:</label>
+            <ToggleSwitch
+              id="showOutOfStock"
+              checked={showOutOfStock}
+              onChange={handleToggle}
+            />
           </div>
           <Button type="submit" outline gradientDuoTone="purpleToPink">
             Apply Filters
@@ -145,23 +170,28 @@ export default function Search() {
         <h1 className="text-3xl font-semibold sm:border-b border-gray-500 p-3 mt-5 ">
           Posts results:
         </h1>
-        <div className="p-7 flex flex-wrap gap-4">
+        <div className="p-7">
           {!loading && books.length === 0 && (
             <p className="text-xl text-gray-500">No books found.</p>
           )}
           {loading && <p className="text-xl text-gray-500">Loading...</p>}
-          {!loading &&
-            books &&
-            books.map((book) => <BookCard key={book._id} book={book} />)}
-          {showMore && (
-            <button
-              onClick={handleShowMore}
-              className="text-teal-500 text-lg hover:underline p-7 w-full"
-            >
-              Show More
-            </button>
+          {!loading && books && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {books.map((book) => (
+                <BookCard key={book._id} book={book} />
+              ))}
+            </div>
           )}
         </div>
+        {!loading && books && totalPages > 1 && (
+          <div className="flex justify-center mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

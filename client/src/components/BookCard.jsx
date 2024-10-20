@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const BookCard = ({ book }) => {
+  console.log(book.slug);
   return (
     <Link to={`/book/${book.slug}`}>
       <div className="dark:bg-gray-800 p-4 rounded-lg shadow-lg w-64 h-80 hover:shadow-2xl hover:scale-105 hover:bg-gray-100 transition duration-300 ease-in-out">

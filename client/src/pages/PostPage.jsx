@@ -133,11 +133,14 @@ export default function PostPage() {
   }, [book]);
 
   const handleAddToCart = () => {
-    const existingItem = cartItems.items.find(
+    const existingItem = cartItems?.items?.find(
       (item) => item.bookId === book._id
     );
     if (existingItem && existingItem.quantity + 1 > book.stock) {
       toast.error("You have reached the stock limit");
+      return;
+    } else if (existingItem && existingItem.quantity + 1 > 5) {
+      toast.error("You have reached the order limit");
       return;
     }
     dispatch(

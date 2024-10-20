@@ -40,6 +40,9 @@ const CartPage = () => {
     if (newQuantity > book.stock) {
       toast.error("You have reached the stock limit for this item.");
       return; // Prevent further action if stock limit is reached
+    } else if (newQuantity>5) {
+      toast.error("You have reached the order limit");
+      return;
     }
 
     // Dispatch the updateCartQty action

@@ -17,18 +17,18 @@ export default function OrderSuccess() {
                 Thank you for placing your order with us. We will process your
                 order as soon as possible.
               </p>
-              <p className="text-gray-500 dark:text-gray-400">
+              {/* <p className="text-gray-500 dark:text-gray-400">
                 Your order number is: #123456
-              </p>
+              </p> */}
               <p className="text-gray-500 dark:text-gray-400">
                 You can track the status of your order in your account
                 dashboard.
               </p>
-              <Link to="/orders">
+              {/* <Link to="/orders">
                 <Button color="success" className="w-full">
                   View Order Status
                 </Button>
-              </Link>
+              </Link> */}
               <Link to="/">
                 <Button color="gray" className="w-full">
                   Continue Shopping

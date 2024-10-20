@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import {
   addNewAddress,
   deleteAddress,
@@ -46,8 +48,28 @@ export default function DashAddress() {
         pinCode: "",
         phone: "",
       });
+      toast.success("Address added successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setShowModal(false);
     } catch (error) {
       console.log(error.message);
+      toast.error(`Error adding address: ${error.message}`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
+      setShowModal(false);
     }
   };
 
@@ -83,6 +105,7 @@ export default function DashAddress() {
       await dispatch(
         deleteAddress({ userId: currentUser._id, addressId: addressIdToDelete })
       );
+      setShowDeleteModal(false)
     } catch (error) {
       console.log(error.message);
     }
@@ -90,6 +113,7 @@ export default function DashAddress() {
 
   return (
     <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
+      <ToastContainer />
       {addressList.length > 0 ? (
         <>
           <div className="flex justify-center mt-4">
