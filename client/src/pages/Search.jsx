@@ -23,11 +23,27 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [categories, setCategories] = useState([]);
+
   const booksPerPage = 9;
 
   const location = useLocation();
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("/api/category/get-categories");
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -39,7 +55,7 @@ export default function Search() {
         ...sidebarData,
         searchTerm: searchTermFromUrl,
         sort: sortFromUrl,
-        category: categoryFromUrl,
+        category: categoryFromUrl || "uncategorized",
       });
     }
 
@@ -56,7 +72,8 @@ export default function Search() {
       if (res.ok) {
         const data = await res.json();
         const filteredBooks = data.books.filter(
-          (book) => showOutOfStock || book.stock > 0
+          (book) =>
+            (showOutOfStock || book.stock > 0)
         );
 
         if (sidebarData.sort === "priceAsc") {
@@ -74,6 +91,7 @@ export default function Search() {
         }
         setTotalPages(Math.ceil(data.totalBooks / booksPerPage));
         setBooks(filteredBooks);
+        console.log("fil",filteredBooks)
         setLoading(false);
       }
     };
@@ -83,40 +101,66 @@ export default function Search() {
   const onPageChange = (page) => {
     setCurrentPage(page);
   };
-
-  const handleChange = (e) => {
-    if (e.target.id === "searchTerm") {
-      setSidebarData({ ...sidebarData, searchTerm: e.target.value });
-    }
-    if (e.target.id === "sort") {
-      const order = e.target.value || "desc";
-      setSidebarData({ ...sidebarData, sort: order });
-    }
-    if (e.target.id === "category") {
-      const category = e.target.value || "uncategorized";
-      setSidebarData({ ...sidebarData, category });
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const urlParams = new URLSearchParams(location.search);
-    urlParams.set("searchTerm", sidebarData.searchTerm);
-    urlParams.set("sort", sidebarData.sort);
-    // urlParams.set("category", sidebarData.category);
+  
+  const applyFilters = (filters) => {
+    const urlParams = new URLSearchParams();
+    urlParams.set("searchTerm", filters.searchTerm);
+    urlParams.set("sort", filters.sort);
+    urlParams.set("category", filters.category);
     urlParams.set("showOutOfStock", showOutOfStock);
     const searchQuery = urlParams.toString();
     navigate(`/books?${searchQuery}`);
   };
+  const handleChange = (e) => {
+    let newSidebarData = { ...sidebarData };
+
+    if (e.target.id === "searchTerm") {
+      newSidebarData.searchTerm = e.target.value;
+    }
+    if (e.target.id === "sort") {
+      newSidebarData.sort = e.target.value || "desc";
+    }
+    if (e.target.id === "category") {
+      newSidebarData.category = e.target.value || "uncategorized";
+    }
+
+    setSidebarData(newSidebarData);
+    applyFilters(newSidebarData);
+  };
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   const urlParams = new URLSearchParams(location.search);
+  //   urlParams.set("searchTerm", sidebarData.searchTerm);
+  //   urlParams.set("sort", sidebarData.sort);
+  //   urlParams.set("category", sidebarData.category);
+  //   urlParams.set("showOutOfStock", showOutOfStock);
+  //   const searchQuery = urlParams.toString();
+  //   navigate(`/books?${searchQuery}`);
+  // };
 
   const handleToggle = () => {
-    setShowOutOfStock(!showOutOfStock);
+    const newShowOutOfStock = !showOutOfStock;
+    setShowOutOfStock(newShowOutOfStock);
+    applyFilters({ ...sidebarData, showOutOfStock: newShowOutOfStock });
   };
+
+  const handleClearAll = () => {
+    const defaultFilters = {
+      searchTerm: "",
+      sort: "desc",
+      category: "uncategorized",
+    };
+    setSidebarData(defaultFilters);
+    setShowOutOfStock(true);
+    applyFilters({ ...defaultFilters, showOutOfStock: true });
+  };
+
   return (
     <div className="flex flex-col md:flex-row">
       <div className="p-7 border-b md:border-r md:min-h-screen border-gray-500">
-        <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
-          <div className="flex   items-center gap-2">
+        <div className="flex flex-col gap-8">
+          <div className="flex items-center gap-2">
             <label className="whitespace-nowrap font-semibold">
               Search Term:
             </label>
@@ -139,20 +183,21 @@ export default function Search() {
               <option value="zZ">Z-A</option>
             </Select>
           </div>
-          {/* <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <label className="font-semibold">Category:</label>
             <Select
               onChange={handleChange}
               value={sidebarData.category}
               id="category"
             >
-              <option value="Novels">Novels</option>
-              <option value="Comics">Comics</option>
-              <option value="Academic Textbooks">Academic Textbooks</option>
-              <option value="Magazines">Magazines</option>
-              <option value="Cookbooks">Cookbooks</option>
+              <option value="uncategorized">All Categories</option>
+              {categories.map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.name}
+                </option>
+              ))}
             </Select>
-          </div> */}
+          </div>
           <div className="flex items-center gap-2">
             <label className="font-semibold">Show out-of-stock:</label>
             <ToggleSwitch
@@ -161,10 +206,13 @@ export default function Search() {
               onChange={handleToggle}
             />
           </div>
-          <Button type="submit" outline gradientDuoTone="purpleToPink">
-            Apply Filters
-          </Button>
-        </form>
+          <button
+            className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
+            onClick={handleClearAll}
+          >
+            Clear All
+          </button>
+        </div>
       </div>
       <div className="w-full">
         <h1 className="text-3xl font-semibold sm:border-b border-gray-500 p-3 mt-5 ">

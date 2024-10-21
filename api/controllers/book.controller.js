@@ -74,7 +74,6 @@ export const getBooks = async (req, res, next) => {
       // Admins can see all books, including deleted ones
       filter = {
         ...(req.query.userId && { userId: req.query.userId }),
-        ...(req.query.category && { category: req.query.category }),
         ...(req.query.condition && { Condition: req.query.condition }),
         ...(req.query.seller && { seller: req.query.seller }),
         ...(req.query.title && { title: req.query.title }),
@@ -89,7 +88,6 @@ export const getBooks = async (req, res, next) => {
       // Regular users can only see non-deleted books
       filter = {
         ...(req.query.userId && { userId: req.query.userId }),
-        ...(req.query.category && { category: req.query.category }),
         ...(req.query.condition && { Condition: req.query.condition }),
         ...(req.query.seller && { seller: req.query.seller }),
         ...(req.query.title && { title: req.query.title }),
@@ -103,8 +101,21 @@ export const getBooks = async (req, res, next) => {
       };
     }
 
+    // Handle category filtering
+    if (req.query.category) {
+      if (req.query.category === "uncategorized") {
+        // No additional category filtering needed; return all books
+        // Simply omit the category filter
+      } else {
+        filter.category = req.query.category; // Apply the category filter for other cases
+      }
+    }
+
+    const sortField = req.query.sort || "updatedAt"; // Default sort field
+    const sortOrder = req.query.order === "asc" ? 1 : -1; // Default to descending
+
     const books = await Book.find(filter)
-      .sort({ updatedAt: -1 })
+      .sort({ [sortField]: sortOrder })
       .skip(skip)
       .limit(limit)
       .populate("category");
@@ -131,9 +142,11 @@ export const getBooks = async (req, res, next) => {
       totalPages: Math.ceil(totalBooks / limit),
     });
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };
+
 
 export const deleteBook = async (req, res, next) => {
   const bookId = req.params.bookId;
