@@ -152,7 +152,7 @@ export const getOrders = async (req, res, next) => {
       orders = await Order.find().populate("userId").populate("addressId");
     } else {
       // If the user is not an admin, retrieve orders for the specified user ID
-      const userId = req.params.userId || req.user.id;
+      const userId = req.user.id;
       orders = await Order.find({ userId })
         .populate("userId")
         .populate("addressId");
@@ -289,3 +289,63 @@ export const cancelOrder = async (req, res, next) => {
   }
 };
 
+export const returnOrder = async (req, res) => {
+  try {
+    const { orderId, itemId } = req.body;
+    const { returnReason } = req.body;
+
+    // Find the order and the specific item
+    const order = await Order.findById(orderId);
+    const item = order.cartItems.find((item) => item._id.toString() === itemId);
+
+    if (!order || !item) {
+      return res.status(404).json({ message: "Order or item not found" });
+    }
+
+    if (item.status !== "delivered") {
+      return res
+        .status(400)
+        .json({ message: "Item is not eligible for return" });
+    }
+
+    // Update the order item status to 'returned'
+    item.status = "returned";
+    item.returnReason = returnReason;
+    item.returnDate = new Date();
+
+    // Update the book stock
+    await Book.findByIdAndUpdate(item.bookId, {
+      $inc: { stock: item.quantity },
+    });
+
+    // Calculate refund amount (you might want to adjust this based on your refund policy)
+    const refundAmount = item.price * item.quantity;
+
+    // Process refund to wallet
+    let wallet = await Wallet.findOne({ userId: order.userId });
+    if (!wallet) {
+      wallet = new Wallet({ userId: order.userId, balance: 0 });
+    }
+
+    wallet.balance += refundAmount;
+    wallet.transactions.push({
+      amount: refundAmount,
+      type: "credit",
+      description: `Refund for returned item in order ${order.orderNumber}`,
+    });
+
+    await wallet.save();
+
+    // Save the updated order
+    await order.save();
+
+    res.json({
+      message: "Order item returned successfully",
+      refundAmount,
+      newWalletBalance: wallet.balance,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to process return" });
+  }
+};

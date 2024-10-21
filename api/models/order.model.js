@@ -33,11 +33,17 @@ const orderSchema = new mongoose.Schema(
         },
         status: {
           type: String,
-          enum: ["pending", "shipped", "delivered", "cancelled"],
+          enum: ["pending", "shipped", "delivered", "cancelled", "returned"],
           default: "pending",
         },
         cancelReason: {
           type: String,
+        },
+        returnReason: {
+          type: String,
+        },
+        returnDate: {
+          type: Date,
         },
         refundStatus: {
           type: String,

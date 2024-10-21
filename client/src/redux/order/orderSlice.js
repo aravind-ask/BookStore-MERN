@@ -17,13 +17,10 @@ export const createNewOrder = createAsyncThunk(
   }
 );
 
-export const fetchOrders = createAsyncThunk(
-  "order/fetchOrders",
-  async (userId) => {
-    const response = await axios.get(`/api/order/${userId}`);
-    return response.data;
-  }
-);
+export const fetchOrders = createAsyncThunk("order/fetchOrders", async () => {
+  const response = await axios.get(`/api/order`);
+  return response.data;
+});
 
 export const updateOrderStatus = createAsyncThunk(
   "order/updateOrderStatus",
@@ -44,6 +41,22 @@ export const cancelOrderItem = createAsyncThunk(
       { cancelReason }
     );
     return response.data;
+  }
+);
+
+export const returnOrderItem = createAsyncThunk(
+  "order/returnOrderItem",
+  async ({ orderId, itemId, returnReason }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/api/order/return`, {
+        orderId,
+        itemId,
+        returnReason,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
   }
 );
 
@@ -132,6 +145,33 @@ const orderSlice = createSlice({
       .addCase(updateOrderStatus.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message;
+      })
+      .addCase(returnOrderItem.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(returnOrderItem.fulfilled, (state, action) => {
+        const { orderId, itemId } =
+          action.payload;
+        const orderIndex = state.orders.findIndex(
+          (order) => order._id === orderId
+        );
+        if (orderIndex !== -1) {
+          const itemIndex = state.orders[orderIndex].cartItems.findIndex(
+            (item) => item._id === itemId
+          );
+          if (itemIndex !== -1) {
+            state.orders[orderIndex].cartItems[itemIndex].status = "returned";
+            state.orders[orderIndex].cartItems[itemIndex].returnReason =
+              action.meta.arg.returnReason;
+            state.orders[orderIndex].cartItems[itemIndex].returnDate =
+              new Date().toISOString();
+          }
+        }
+        // You might want to update the user's wallet balance in your user state as well
+        // state.user.walletBalance = newWal leteBalance;
+      })
+      .addCase(returnOrderItem.rejected, (state, action) => {
+        state.error = action.payload.message;
       });
   },
 });

@@ -1,4 +1,4 @@
-import { Modal, Table, Button } from "flowbite-react";
+import { Modal, Table, Button, Spinner, Pagination } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
@@ -7,31 +7,39 @@ import { FaCheck, FaTimes, FaUnlock, FaLock } from "react-icons/fa";
 export default function DashUsers() {
   const { currentUser } = useSelector((state) => state.user);
   const [users, setUsers] = useState([]);
-  const [showMore, setShowMore] = useState(true);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [userIdToUpdate, setUserIdToUpdate] = useState("");
   const [updateAction, setUpdateAction] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [currentPage, setCurrentPage] = useState(1); // Pagination state
+  const [totalPages, setTotalPages] = useState(1); // Total pages for pagination
+  const usersPerPage = 9; // Define users per page
+
   useEffect(() => {
     const fetchUsers = async () => {
+      setIsLoading(true); // Start loading
       try {
-        const res = await fetch(`/api/user/getusers`);
+        const res = await fetch(
+          `/api/user/getusers?page=${currentPage}&limit=${usersPerPage}`
+        );
         const data = await res.json();
         if (res.ok) {
           setUsers(data.users);
-          if (data.users.length < 9) {
-            setShowMore(false);
-          }
+          setFilteredUsers(data.users); // Initially set filtered users to full list
+          setTotalPages(data.totalPages || 1); // Ensure totalPages has a fallback value
         }
       } catch (error) {
         console.log(error.message);
+      } finally {
+        setIsLoading(false); // Stop loading
       }
     };
     if (currentUser.isAdmin) {
       fetchUsers();
     }
-  }, [currentUser._id]);
+  }, [currentUser._id, currentPage]); // Refetch users when currentPage changes
 
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
@@ -43,39 +51,6 @@ export default function DashUsers() {
     });
     setFilteredUsers(filtered);
   };
-
-  const handleShowMore = async () => {
-    const startIndex = users.length;
-    try {
-      const res = await fetch(`/api/user/getusers?startIndex=${startIndex}`);
-      const data = await res.json();
-      if (res.ok) {
-        setUsers((prev) => [...prev, ...data.users]);
-        if (data.users.length < 9) {
-          setShowMore(false);
-        }
-      }
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
-
-  // const handleDeleteUser = async () => {
-  //   try {
-  //     const res = await fetch(`/api/user/delete/${userIdToDelete}`, {
-  //       method: "DELETE",
-  //     });
-  //     const data = await res.json();
-  //     if (res.ok) {
-  //       setUsers((prev) => prev.filter((user) => user._id !== userIdToDelete));
-  //       setShowModal(false);
-  //     } else {
-  //       console.log(data.message);
-  //     }
-  //   } catch (error) {
-  //     console.log(error.message);
-  //   }
-  // };
 
   const handleUpdateUser = async () => {
     try {
@@ -101,9 +76,13 @@ export default function DashUsers() {
     }
   };
 
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber); // Update the current page
+  };
+
   return (
     <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
-      {currentUser.isAdmin && users.length > 0 ? (
+      {currentUser.isAdmin ? (
         <>
           <input
             type="search"
@@ -112,124 +91,91 @@ export default function DashUsers() {
             placeholder="Search users"
             className="w-full mb-4 p-2 pl-10 text-sm text-gray-700"
           />
-          <Table hoverable className="shadow-md">
-            <Table.Head>
-              <Table.HeadCell>Date created</Table.HeadCell>
-              <Table.HeadCell>User image</Table.HeadCell>
-              <Table.HeadCell>Username</Table.HeadCell>
-              <Table.HeadCell>Email</Table.HeadCell>
-              <Table.HeadCell>Admin</Table.HeadCell>
-              <Table.HeadCell>Bock/Unblock</Table.HeadCell>
-            </Table.Head>
-            {filteredUsers.length > 0
-              ? filteredUsers.map((user) => (
-                  <Table.Body className="divide-y" key={user._id}>
-                    <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                      <Table.Cell>
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <img
-                          src={user.profilePicture}
-                          alt={user.username}
-                          className="w-10 h-10 object-cover bg-gray-500 rounded-full"
-                        />
-                      </Table.Cell>
-                      <Table.Cell>{user.username}</Table.Cell>
-                      <Table.Cell>{user.email}</Table.Cell>
-                      <Table.Cell>
-                        {user.isAdmin ? (
-                          <FaCheck className="text-green-500" />
-                        ) : (
-                          <FaTimes className="text-red-500" />
-                        )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        {user.isBlocked ? (
-                          <span
-                            onClick={() => {
-                              setShowModal(true);
-                              setUserIdToUpdate(user._id);
-                              setUpdateAction("unblock");
-                            }}
-                            className="font-medium text-yellow-500 hover:underline cursor-pointer"
-                          >
-                            <FaLock className="inline-block mr-1" /> Blocked
-                          </span>
-                        ) : (
-                          <span
-                            onClick={() => {
-                              setShowModal(true);
-                              setUserIdToUpdate(user._id);
-                              setUpdateAction("block");
-                            }}
-                            className="font-medium text-yellow-500 hover:underline cursor-pointer"
-                          >
-                            <FaUnlock className="inline-block mr-1" /> Unblocked
-                          </span>
-                        )}
-                      </Table.Cell>
-                    </Table.Row>
-                  </Table.Body>
-                ))
-              : users.map((user) => (
-                  <Table.Body className="divide-y" key={user._id}>
-                    <Table.Row className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                      <Table.Cell>
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <img
-                          src={user.profilePicture}
-                          alt={user.username}
-                          className="w-10 h-10 object-cover bg-gray-500 rounded-full"
-                        />
-                      </Table.Cell>
-                      <Table.Cell>{user.username}</Table.Cell>
-                      <Table.Cell>{user.email}</Table.Cell>
-                      <Table.Cell>
-                        {user.isAdmin ? (
-                          <FaCheck className="text-green-500" />
-                        ) : (
-                          <FaTimes className="text-red-500" />
-                        )}
-                      </Table.Cell>
-                      <Table.Cell>
-                        {user.isBlocked ? (
-                          <span
-                            onClick={() => {
-                              setShowModal(true);
-                              setUserIdToUpdate(user._id);
-                              setUpdateAction("unblock");
-                            }}
-                            className="font-medium text-yellow-500 hover:underline cursor-pointer"
-                          >
-                            <FaLock className="inline-block mr-1" /> Blocked
-                          </span>
-                        ) : (
-                          <span
-                            onClick={() => {
-                              setShowModal(true);
-                              setUserIdToUpdate(user._id);
-                              setUpdateAction("block");
-                            }}
-                            className="font-medium text-yellow-500 hover:underline cursor-pointer"
-                          >
-                            <FaUnlock className="inline-block mr-1" /> Unblocked
-                          </span>
-                        )}
-                      </Table.Cell>
-                    </Table.Row>
-                  </Table.Body>
-                ))}
-          </Table>
-          {showMore && (
-            <button
-              onClick={handleShowMore}
-              className="w-full text-teal-500 self-center text-sm py-7"
-            >
-              Show more
-            </button>
+          {/* Loading Spinner */}
+          {isLoading ? (
+            <div className="flex justify-center">
+              <Spinner aria-label="Loading users" size="lg" />
+            </div>
+          ) : (
+            <>
+              {filteredUsers.length > 0 ? (
+                <>
+                  <Table hoverable className="shadow-md">
+                    <Table.Head>
+                      <Table.HeadCell>Date created</Table.HeadCell>
+                      <Table.HeadCell>User image</Table.HeadCell>
+                      <Table.HeadCell>Username</Table.HeadCell>
+                      <Table.HeadCell>Email</Table.HeadCell>
+                      <Table.HeadCell>Admin</Table.HeadCell>
+                      <Table.HeadCell>Block/Unblock</Table.HeadCell>
+                    </Table.Head>
+                    <Table.Body className="divide-y">
+                      {filteredUsers.map((user) => (
+                        <Table.Row
+                          key={user._id}
+                          className="bg-white dark:border-gray-700 dark:bg-gray-800"
+                        >
+                          <Table.Cell>
+                            {new Date(user.createdAt).toLocaleDateString()}
+                          </Table.Cell>
+                          <Table.Cell>
+                            <img
+                              src={user.profilePicture}
+                              alt={user.username}
+                              className="w-10 h-10 object-cover bg-gray-500 rounded-full"
+                            />
+                          </Table.Cell>
+                          <Table.Cell>{user.username}</Table.Cell>
+                          <Table.Cell>{user.email}</Table.Cell>
+                          <Table.Cell>
+                            {user.isAdmin ? (
+                              <FaCheck className="text-green-500" />
+                            ) : (
+                              <FaTimes className="text-red-500" />
+                            )}
+                          </Table.Cell>
+                          <Table.Cell>
+                            {user.isBlocked ? (
+                              <span
+                                onClick={() => {
+                                  setShowModal(true);
+                                  setUserIdToUpdate(user._id);
+                                  setUpdateAction("unblock");
+                                }}
+                                className="font-medium text-yellow-500 hover:underline cursor-pointer"
+                              >
+                                <FaLock className="inline-block mr-1" /> Blocked
+                              </span>
+                            ) : (
+                              <span
+                                onClick={() => {
+                                  setShowModal(true);
+                                  setUserIdToUpdate(user._id);
+                                  setUpdateAction("block");
+                                }}
+                                className="font-medium text-yellow-500 hover:underline cursor-pointer"
+                              >
+                                <FaUnlock className="inline-block mr-1" />{" "}
+                                Unblocked
+                              </span>
+                            )}
+                          </Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table>
+                  {/* Pagination Component */}
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    className="mt-4"
+                  />
+                </>
+              ) : (
+                <p>No users found!</p>
+              )}
+            </>
           )}
         </>
       ) : (

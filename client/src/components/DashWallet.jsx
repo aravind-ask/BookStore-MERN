@@ -36,10 +36,11 @@ export default function DashWallet() {
             <FaWallet className="text-4xl text-blue-600 mr-4" />
             <div>
               <h2 className="text-2xl font-bold text-gray-800">My Wallet</h2>
-              <p className="text-sm text-gray-500">Current Balance</p>
+              <p className="text-sm text-gray-500">ID: </p>
             </div>
           </div>
           <div className="text-right">
+            <p className="text-sm text-gray-500">Current Balance:</p>
             <p className="text-3xl font-bold text-blue-600">
               ${balance.toFixed(2)}
             </p>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Modal, Card, Badge, Select } from "flowbite-react";
+import { Button, Modal, Card, Badge, Select, Toast } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import {
   cancelOrderItem,
   fetchOrders,
+  returnOrderItem,
   updateOrderStatus,
 } from "../redux/order/orderSlice";
 
@@ -17,12 +18,14 @@ const OrderList = () => {
   const [showModal, setShowModal] = useState(false);
   const [cancelledOrderId, setCancelledOrderId] = useState("");
   const [cancelledItemId, setCancelledItemId] = useState("");
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
 
   useEffect(() => {
     if (currentUser) {
-      dispatch(fetchOrders(currentUser._id));
+      dispatch(fetchOrders());
     }
   }, [dispatch, currentUser]);
 
@@ -45,6 +48,33 @@ const OrderList = () => {
       setShowModal(false);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleReturn = (orderId, itemId) => {
+    setCancelledOrderId(orderId);
+    setCancelledItemId(itemId);
+    setShowReturnModal(true);
+  };
+
+  const handleConfirmReturn = async () => {
+    try {
+      const response = await dispatch(
+        returnOrderItem({
+          orderId: cancelledOrderId,
+          itemId: cancelledItemId,
+          returnReason,
+        })
+      );
+      console.log(response);
+      setShowReturnModal(false); // Show a success message or toast
+      // Toast.success(
+      //   `Refund of ₹${response.payload.refundAmount} processed successfully`
+      // );
+    } catch (error) {
+      console.error(error);
+      // Show an error message or toast
+      // Toast.error("Failed to process return");
     }
   };
 
@@ -177,13 +207,23 @@ const OrderList = () => {
                         )}
                       </div>
                       <div>
-                        {item.status !== "cancelled" && (
+                        {(item.status !== "cancelled" &&
+                          item.status !== "delivered" && item.status!=="returned") && (
+                            <Button
+                              color="failure"
+                              size="xs"
+                              onClick={() => handleCancel(order._id, item._id)}
+                            >
+                              Cancel
+                            </Button>
+                          )}
+                        {item.status === "delivered" && (
                           <Button
                             color="failure"
                             size="xs"
-                            onClick={() => handleCancel(order._id, item._id)}
+                            onClick={() => handleReturn(order._id, item._id)}
                           >
-                            Cancel
+                            Return
                           </Button>
                         )}
                       </div>
@@ -222,6 +262,27 @@ const OrderList = () => {
           </Button>
           <Button onClick={() => setShowModal(false)} color="gray">
             Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={showReturnModal} onClose={() => setShowReturnModal(false)}>
+        <Modal.Header>Return Order Item</Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to return this order item?</p>
+          <p>Reason for return:</p>
+          <textarea
+            value={returnReason}
+            onChange={(e) => setReturnReason(e.target.value)}
+            placeholder="Enter reason for return"
+            className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={handleConfirmReturn} color="warning">
+            Confirm Return
+          </Button>
+          <Button onClick={() => setShowReturnModal(false)} color="gray">
+            Cancel
           </Button>
         </Modal.Footer>
       </Modal>
