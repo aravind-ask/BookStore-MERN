@@ -19,6 +19,7 @@ import CartPage from "./components/Cart";
 import CheckOut from "./pages/CheckOut";
 import OrderSuccess from "./pages/OrderSuccess";
 import PasswordReset from "./components/PasswordReset";
+import Contact from "./pages/ContactUs";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
         <Route
           path="/sign-in"
           element={
