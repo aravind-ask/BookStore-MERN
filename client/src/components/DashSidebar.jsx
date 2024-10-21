@@ -7,6 +7,14 @@ import {
   HiAnnotation,
   HiChartPie,
 } from "react-icons/hi";
+import {
+  FaHome,
+  FaBook,
+  FaShoppingCart,
+  FaUser,
+  FaWallet,
+} from "react-icons/fa";
+
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { signoutSuccess } from "../redux/user/userSlice";
@@ -68,22 +76,14 @@ export default function DashSidebar() {
           </Link>
           {currentUser.isAdmin && (
             <Link to="/dashboard?tab=books">
-              <Sidebar.Item
-                active={tab === "books"}
-                icon={HiDocumentText}
-                as="div"
-              >
+              <Sidebar.Item active={tab === "books"} icon={FaBook} as="div">
                 Books
               </Sidebar.Item>
             </Link>
           )}
           {!currentUser.isAdmin && (
             <Link to="/dashboard?tab=address">
-              <Sidebar.Item
-                active={tab === "posts"}
-                icon={HiDocumentText}
-                as="div"
-              >
+              <Sidebar.Item active={tab === "address"} icon={FaHome} as="div">
                 My Addresses
               </Sidebar.Item>
             </Link>
@@ -92,10 +92,18 @@ export default function DashSidebar() {
             <Link to="/dashboard?tab=orders">
               <Sidebar.Item
                 active={tab === "orders"}
-                icon={HiDocumentText}
+                icon={FaShoppingCart}
                 as="div"
               >
                 My Orders
+              </Sidebar.Item>
+            </Link>
+          )}
+          {!currentUser.isAdmin && (
+            <Link to="/dashboard?tab=wallet">
+              <Sidebar.Item active={tab === "wallet"} icon={FaWallet} as="div">
+                {" "}
+                Wallet
               </Sidebar.Item>
             </Link>
           )}
@@ -113,7 +121,7 @@ export default function DashSidebar() {
               <Link to="/dashboard?tab=orders">
                 <Sidebar.Item
                   active={tab === "orders"}
-                  icon={HiAnnotation}
+                  icon={FaShoppingCart}
                   as="div"
                 >
                   All Orders

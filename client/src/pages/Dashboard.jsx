@@ -9,6 +9,7 @@ import DashboardComp from "../components/DashboardComp";
 import DashCategory from "../components/DashCategory";
 import DashAddress from "../components/DashAddress";
 import OrderList from "../components/OrderList";
+import DashWallet from "../components/DashWallet";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -38,6 +39,8 @@ export default function Dashboard() {
       {tab === "address" && <DashAddress />}
       {/* Orders  */}
       {tab === "orders" && <OrderList />}
+      {/* Wallet  */}
+      {tab === "wallet" && <DashWallet />}
       {/* categories  */}
       {tab === "categories" && <DashCategory />}
       {/* dashboard comp */}

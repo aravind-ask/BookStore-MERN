@@ -28,4 +28,7 @@ const WalletSchema = new mongoose.Schema({
   ],
 });
 
-export default mongoose.model("Wallet", WalletSchema);
+const Wallet = mongoose.model("Wallet", WalletSchema);
+
+export default Wallet;
+

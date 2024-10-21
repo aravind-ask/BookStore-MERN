@@ -1,6 +1,12 @@
 import express from "express";
 import { verifyToken } from "../utils/verifyUser.js";
-import { cancelOrder, getOrders, placeOrder, updateOrderItemStatus, verifyPayment } from "../controllers/order.controller.js";
+import {
+  cancelOrder,
+  getOrders,
+  placeOrder,
+  updateOrderItemStatus,
+  verifyPayment,
+} from "../controllers/order.controller.js";
 
 const router = express.Router();
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
-import { Button, Modal, Table } from "flowbite-react";
+import { Button, Modal, Card, Badge, Select } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import {
   cancelOrderItem,
@@ -10,7 +9,6 @@ import {
 } from "../redux/order/orderSlice";
 
 const OrderList = () => {
-  // const [orders, setOrders] = useState([]);
   const dispatch = useDispatch();
 
   const { currentUser } = useSelector((state) => state.user);
@@ -20,21 +18,7 @@ const OrderList = () => {
   const [cancelledOrderId, setCancelledOrderId] = useState("");
   const [cancelledItemId, setCancelledItemId] = useState("");
   const [cancelReason, setCancelReason] = useState("");
-
-  console.log(currentUser);
-
-  // useEffect(() => {
-  //   const fetchOrders = async () => {
-  //     try {
-  //       const response = await axios.get(`/api/order/${currentUser._id}`);
-  //       setOrders(response.data);
-  //       console.log(response.data);
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   };
-  //   fetchOrders();
-  // }, []);
+  const [filterStatus, setFilterStatus] = useState("All");
 
   useEffect(() => {
     if (currentUser) {
@@ -42,10 +26,11 @@ const OrderList = () => {
     }
   }, [dispatch, currentUser]);
 
+  // Handle cancellation modal
   const handleCancel = (orderId, itemId) => {
     setCancelledOrderId(orderId);
     setCancelledItemId(itemId);
-    setShowModal(true); // Show the modal for confirmation
+    setShowModal(true);
   };
 
   const handleConfirmCancel = async () => {
@@ -63,149 +48,162 @@ const OrderList = () => {
     }
   };
 
+  // Handle order status update for admins
   const handleStatusChange = (orderId, itemId, newStatus) => {
     dispatch(updateOrderStatus({ orderId, itemId, newStatus }));
   };
 
-  // const handleCancelModalClose = () => {
-  //   setShowModal(false);
-  //   setCancelledOrderId("");
-  //   setCancelledItemId("");
-  // };
+  // Sorting orders by most recent first
+  const sortedOrders = [...(orders || [])].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+
+  // Filtering orders by status
+  const filteredOrders = sortedOrders.filter((order) =>
+    filterStatus === "All" ? true : order.orderSummary.status === filterStatus
+  );
 
   return (
-    <div className="max-w mx-auto p-4 pt-6">
-      <h2 className="text-2xl font-bold mb-4">Order List</h2>
+    <div className="max-w-4xl mx-auto p-4">
+      {/* Page Header */}
+      <Card className="mb-8 shadow-md">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">My Orders</h2>
+            <p className="text-sm text-gray-500">
+              Overview of your order history
+            </p>
+          </div>
+
+          {/* Filter Dropdown */}
+          <div>
+            <Select
+              onChange={(e) => setFilterStatus(e.target.value)}
+              value={filterStatus}
+              className="block w-full text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm"
+            >
+              <option value="All">All Orders</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="pending">Pending</option>
+              <option value="shipped">Shipped</option>
+            </Select>
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-bold text-blue-600">{orders.length}</p>
+            <Badge color="success" className="mt-2">
+              Total Orders
+            </Badge>
+          </div>
+        </div>
+      </Card>
+
       {isLoading ? (
-        <p>Loading...</p>
+        <div>Loading...</div>
       ) : (
-        <Table className="w-full shadow-md rounded-lg overflow-hidden">
-          <Table.Head className="bg-gray-50">
-            <Table.HeadCell className="px-4 py-2 text-left">
-              Order No:
-            </Table.HeadCell>
-            <Table.HeadCell className="px-4 py-2 text-left">
-              Total Order Value
-            </Table.HeadCell>
-            <Table.HeadCell className="px-4 py-2 text-left">
-              Book Details
-            </Table.HeadCell>
-            <Table.HeadCell className="px-4 py-2 text-left">
-              Quantity
-            </Table.HeadCell>
-            <Table.HeadCell className="px-4 py-2 text-left">
-              Price
-            </Table.HeadCell>
-            <Table.HeadCell className="px-4 py-2 text-left">
-              Status
-            </Table.HeadCell>
-            <Table.HeadCell className="px-4 py-2 text-left">
-              Actions
-            </Table.HeadCell>
-          </Table.Head>
-          <Table.Body>
-            {orders?.map((order) => (
-              <React.Fragment key={order._id}>
-                <Table.Row className="hover:bg-gray-100">
-                  <Table.Cell
-                    className="px-4 py-2 text-center"
-                    rowSpan={order.cartItems.length + 1}
-                  >
-                    {order.orderNumber}
-                  </Table.Cell>
-                  <Table.Cell
-                    className="px-4 py-2 text-center"
-                    rowSpan={order.cartItems.length + 1}
-                  >
-                    ${order.orderSummary.total}
-                  </Table.Cell>
-                  <Table.Cell className="px-4 py-2 text-center" />
-                  <Table.Cell className="px-4 py-2 text-center" />
-                </Table.Row>
-                {order.cartItems.map((item, index) => (
-                  <Table.Row key={index} className="hover:bg-gray-100">
-                    <Table.Cell className="flex gap-3 px-4 py-2 text-center">
+        <div className="space-y-6">
+          {filteredOrders.map((order) => (
+            <Card key={order._id} className="shadow-lg">
+              {/* Order Header */}
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <Badge color="info" size="lg" className="text-lg">
+                    Order No: {order.orderNumber}
+                  </Badge>
+                  <p className="text-gray-600 mt-2">
+                    Total: ${order.orderSummary.total.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <Badge color="info">{order.orderSummary.status}</Badge>
+                </div>
+              </div>
+
+              {/* Books in the Order */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {order.cartItems.map((item) => (
+                  <Card key={item._id} className="shadow-md">
+                    <div className="flex gap-4 items-center">
                       <img
                         src={item.images[0]}
                         alt={item.book}
-                        width={50}
-                        height={50}
+                        className="w-20 h-20 object-cover rounded-md"
                       />
-                      <span className="text-gray-500 text-sm">{item.book}</span>
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-2 text-center">
-                      {item.quantity}
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-2 text-center">
-                      ${item.price}
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-2 text-center">
-                      {currentUser.isAdmin ? (
-                        <select
-                          value={item.status}
-                          onChange={(e) =>
-                            handleStatusChange(
-                              order._id,
-                              item._id,
-                              e.target.value
-                            )
-                          }
-                          className="block w-full pl-10 text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                        >
-                          <option
-                            value="pending"
-                            selected={item.status === "pending"}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {item.book}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Quantity: {item.quantity}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Price: ${item.price.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Status and Cancel Action */}
+                    <div className="flex justify-between items-center mt-4">
+                      <div>
+                        {currentUser.isAdmin ? (
+                          <select
+                            value={item.status}
+                            onChange={(e) =>
+                              handleStatusChange(
+                                order._id,
+                                item._id,
+                                e.target.value
+                              )
+                            }
+                            className="block w-full text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm"
                           >
-                            Pending
-                          </option>
-                          <option
-                            value="shipped"
-                            selected={item.status === "shipped"}
+                            <option value="pending">Pending</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        ) : (
+                          <Badge
+                            color={
+                              item.status === "delivered"
+                                ? "success"
+                                : item.status === "cancelled"
+                                ? "failure"
+                                : "warning"
+                            }
                           >
-                            Shipped
-                          </option>
-                          <option
-                            value="delivered"
-                            selected={item.status === "delivered"}
+                            {item.status}
+                          </Badge>
+                        )}
+                      </div>
+                      <div>
+                        {item.status !== "cancelled" && (
+                          <Button
+                            color="failure"
+                            size="xs"
+                            onClick={() => handleCancel(order._id, item._id)}
                           >
-                            Delivered
-                          </option>
-                          <option
-                            value="cancelled"
-                            selected={item.status === "cancelled"}
-                          >
-                            Cancelled
-                          </option>
-                        </select>
-                      ) : (
-                        item.status
-                      )}
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-2 text-center">
-                      {item.status === "cancelled" ? (
-                        <span>You cancelled the order</span>
-                      ) : (
-                        <Button
-                          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                          onClick={() => handleCancel(order._id, item._id)}
-                        >
-                          Cancel
-                        </Button>
-                      )}
-                    </Table.Cell>
-                  </Table.Row>
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
                 ))}
-              </React.Fragment>
-            ))}
-          </Table.Body>
-        </Table>
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
+
       {error && (
-        <div className="text-red-500">
-          <HiOutlineExclamationCircle className="inline-block" />
+        <div className="text-red-500 mt-4">
+          <HiOutlineExclamationCircle className="inline-block mr-2" />
           {error}
         </div>
       )}
+
+      {/* Cancel Order Modal */}
       <Modal show={showModal} onClose={() => setShowModal(false)}>
         <Modal.Header>Cancel Order Item</Modal.Header>
         <Modal.Body>
@@ -215,11 +213,16 @@ const OrderList = () => {
             value={cancelReason}
             onChange={(e) => setCancelReason(e.target.value)}
             placeholder="Enter reason for cancellation"
+            className="w-full p-2 mt-2 border border-gray-300 rounded-md"
           />
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={handleConfirmCancel}>Confirm Cancel</Button>
-          <Button onClick={() => setShowModal(false)}>Cancel</Button>
+          <Button onClick={handleConfirmCancel} color="failure">
+            Confirm Cancel
+          </Button>
+          <Button onClick={() => setShowModal(false)} color="gray">
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>

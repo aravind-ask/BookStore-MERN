@@ -60,11 +60,13 @@ const orderSlice = createSlice({
         state.isLoading = false;
         state.approvalURL = action.payload.approvalURL;
         state.orderId = action.payload.orderId;
+        state.error = null;
       })
       .addCase(createNewOrder.rejected, (state) => {
         state.isLoading = false;
         state.approvalURL = null;
         state.orderId = null;
+        state.error = "Failed to create new order";
       })
       .addCase(fetchOrders.pending, (state) => {
         state.isLoading = true;
@@ -72,16 +74,20 @@ const orderSlice = createSlice({
       .addCase(fetchOrders.fulfilled, (state, action) => {
         state.isLoading = false;
         state.orders = action.payload;
+        state.error = null;
       })
       .addCase(fetchOrders.rejected, (state, action) => {
         state.isLoading = false;
+        state.orders = [];
         state.error = action.error.message;
       })
       .addCase(cancelOrderItem.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(cancelOrderItem.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.error = null;
         // Update the specific order item in the state
         const { orderId, itemId } = action.meta.arg;
         const orderIndex = state.orders.findIndex(
@@ -109,6 +115,7 @@ const orderSlice = createSlice({
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.error = null;
         const { orderId, itemId, newStatus } = action.meta.arg;
         const orderIndex = state.orders.findIndex(
           (order) => order._id === orderId
