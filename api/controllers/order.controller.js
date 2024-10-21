@@ -1,5 +1,6 @@
 import Book from "../models/books.model.js";
 import Order from "../models/order.model.js";
+import Wallet from "../models/wallet.model.js";
 import { errorHandler } from "../utils/error.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
@@ -66,8 +67,9 @@ export const placeOrder = async (req, res, next) => {
       await order.save();
       res.json({ message: "Order placed successfully" });
     } else if (paymentMethod === "Razorpay") {
+      console.log("Razorpay amount:", Math.round(orderSummary.total * 100));
       const options = {
-        amount: orderSummary.total * 100, // Razorpay expects amount in paise
+        amount: Math.round(orderSummary.total * 100), // Convert to paise and round to ensure it's an integer
         currency: "INR",
         receipt: generateOrderNumber(),
         payment_capture: 1,
@@ -82,7 +84,13 @@ export const placeOrder = async (req, res, next) => {
         user: req.user.name,
         cartItems: cartItems.items.map((item) => ({
           bookId: item.bookId,
+          book: item.title,
+          images: item.images,
+          price: item.price,
+          discount: item.discount,
           quantity: item.quantity,
+          status: item.status,
+          orderDate: new Date(),
         })),
         address: selectedAddress,
         paymentMethod,
@@ -199,6 +207,84 @@ export const updateOrderItemStatus = async (req, res, next) => {
     res.json({ message: "Order item status updated successfully" });
   } catch (error) {
     console.log(error);
+    next(error);
+  }
+};
+
+export const cancelOrder = async (req, res, next) => {
+  try {
+    const { orderId, itemId } = req.params;
+    const { cancelReason } = req.body;
+
+    // Find the order
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return next(errorHandler(404, "Order not found"));
+    }
+
+    // Find the specific item in the order
+    const item = order.cartItems.find((item) => item._id.toString() === itemId);
+    if (!item) {
+      return next(errorHandler(404, "Item not found in the order"));
+    }
+
+    // Check if the item is already cancelled
+    if (item.status === "cancelled") {
+      return next(errorHandler(400, "This item is already cancelled"));
+    }
+
+    // Update the item status to cancelled
+    item.status = "cancelled";
+    item.cancelReason = cancelReason;
+
+    // Update the book stock
+    await Book.findByIdAndUpdate(
+      item.bookId,
+      { $inc: { stock: item.quantity } },
+      { new: true }
+    );
+
+    // Calculate refund amount
+    const refundAmount = item.price * item.quantity;
+
+    // Process refund to wallet
+    let wallet = await Wallet.findOne({ userId: order.userId });
+    if (!wallet) {
+      wallet = new Wallet({ userId: order.userId });
+    }
+
+    wallet.balance += refundAmount;
+    wallet.transactions.push({
+      amount: refundAmount,
+      type: "credit",
+      description: `Refund for cancelled item in order ${order.orderNumber}`,
+    });
+
+    await wallet.save();
+
+    // Update order item with refund information
+    item.refundStatus = "processed";
+    item.refundAmount = refundAmount;
+
+    // If it was a Razorpay payment, we might want to record the original payment ID
+    if (
+      order.paymentMethod === "Razorpay" &&
+      order.paymentStatus === "success"
+    ) {
+      item.originalPaymentId = order.razorpayPaymentId;
+    }
+
+    // Save the updated order
+    await order.save();
+
+    res.json({
+      message: "Order item cancelled successfully",
+      refundStatus: item.refundStatus,
+      refundAmount: refundAmount,
+      walletBalance: wallet.balance,
+    });
+  } catch (error) {
+    console.error(error);
     next(error);
   }
 };
