@@ -20,14 +20,13 @@ const CartPage = () => {
   const totalCartAmount =
     cartItems && cartItems.items && cartItems.items.length > 0
       ? cartItems.items.reduce(
-          (sum, current) => sum + current.price * current.quantity,
+          (sum, current) => sum + current.discountedPrice * current.quantity,
           0
         )
       : 0;
   console.log("Cart:", cartItems);
 
   const dispatch = useDispatch();
-
 
   function handleQuantityChange(bookId, quantity, action) {
     const book = cartItems.items.find((item) => item.bookId === bookId);
@@ -40,7 +39,7 @@ const CartPage = () => {
     if (newQuantity > book.stock) {
       toast.error("You have reached the stock limit for this item.");
       return; // Prevent further action if stock limit is reached
-    } else if (newQuantity>5) {
+    } else if (newQuantity > 5) {
       toast.error("You have reached the order limit");
       return;
     }
@@ -60,7 +59,6 @@ const CartPage = () => {
   }
 
   function handleRemove(bookId) {
-    console.log(bookId);
     dispatch(deleteCartItem({ userId: currentUser._id, bookId: bookId })).then(
       (data) => {
         if (data?.payload) {
@@ -70,19 +68,17 @@ const CartPage = () => {
     );
   }
 
-   const handleCheckout = () => {
-     // Here you can perform any validation or processing before checkout
-     if (cartItems.items.length === 0) {
-       setMessage("Your cart is empty. Please add items before checking out.");
-       setError(true);
-       return;
-     }
+  const handleCheckout = () => {
+    if (cartItems.items.length === 0) {
+      setMessage("Your cart is empty. Please add items before checking out.");
+      setError(true);
+      return;
+    }
 
     navigate("/book/checkout", { state: { cartItems } });
-   };
+  };
 
   useEffect(() => {
-    // fetchCartItems(userId);
     dispatch(fetchCartItems(currentUser._id));
   }, [dispatch]);
 
@@ -107,10 +103,10 @@ const CartPage = () => {
       </div>
     );
   }
+
   return (
     <div className="max-w-4xl mx-auto p-4 pt-6">
       <ToastContainer />
-
       <h2 className="text-2xl font-bold mb-4">Your Cart</h2>
       {message && (
         <div
@@ -134,7 +130,7 @@ const CartPage = () => {
           </thead>
           <tbody>
             {cartItems.items.map((item) => (
-              <tr key={item.id} className="border-b border-gray-200">
+              <tr key={item.bookId} className="border-b border-gray-200">
                 <td className="px-4 py-2 flex items-center">
                   <img
                     src={item.images[0]}
@@ -143,7 +139,21 @@ const CartPage = () => {
                   />
                   <span>{item.title}</span>
                 </td>
-                <td className="px-4 py-2">${item.price}</td>
+                <td className="px-4 py-2">
+                  {/* Show discounted price if applicable */}
+                  {item.discountedPrice < item.price ? (
+                    <>
+                      <span className="text-red-500 font-bold">
+                        ₹{item.discountedPrice}
+                      </span>
+                      <span className="line-through text-gray-500 ml-2">
+                        ₹{item.price.toFixed(2)}
+                      </span>
+                    </>
+                  ) : (
+                    <span>₹{item.price.toFixed(2)}</span>
+                  )}
+                </td>
                 <td className="px-4 py-2 flex">
                   <button
                     onClick={() =>
@@ -163,7 +173,9 @@ const CartPage = () => {
                     +
                   </button>
                 </td>
-                <td className="px-4 py-2">${item.price * item.quantity}</td>
+                <td className="px-4 py-2">
+                  ₹{(item.discountedPrice * item.quantity).toFixed(2)}
+                </td>
                 <td className="px-4 py-2">
                   <button
                     onClick={() => handleRemove(item.bookId)}
@@ -177,7 +189,9 @@ const CartPage = () => {
           </tbody>
         </table>
         <div className="flex justify-between mt-4">
-          <h3 className="text-lg font-bold">Total Price: {totalCartAmount}</h3>
+          <h3 className="text-lg font-bold">
+            Total Price: ₹{totalCartAmount.toFixed(2)}
+          </h3>
           <button
             onClick={handleCheckout}
             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"

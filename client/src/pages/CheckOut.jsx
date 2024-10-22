@@ -28,6 +28,9 @@ const CheckoutPage = () => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [orderSummary, setOrderSummary] = useState({});
+  const [couponCode, setCouponCode] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
   const { currentUser } = useSelector((state) => state.user);
   const { addressList } = useSelector((state) => state.address);
   console.log(addressList);
@@ -204,16 +207,32 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (cartItems && cartItems.items) {
       const subtotal = cartItems.items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
+        (sum, item) => sum + item.discountedPrice * item.quantity,
         0
       );
-      const tax = subtotal * 0.08;
-      const total = subtotal + tax;
-      setOrderSummary({ subtotal, tax, total });
-    } else {
-      setOrderSummary({}); // or some default values
+      const total = subtotal  - discountAmount;
+      setOrderSummary({ subtotal, total, discount: discountAmount, coupon: couponCode });
     }
-  }, [cartItems]);
+  }, [cartItems, discountAmount]);
+
+  const applyCoupon = async () => {
+    try {
+      const response = await axios.post("/api/order/apply-coupon", {
+        couponCode,
+        totalAmount: orderSummary.total,
+      });
+      if (response.data.discountAmount) {
+        setDiscountAmount(response.data.discountAmount);
+        setCouponError("");
+      } else {
+        setDiscountAmount(0);
+        setCouponError("Invalid or expired coupon.");
+      }
+    } catch (error) {
+      console.error("Error applying coupon:", error);
+      setCouponError("Error applying coupon.");
+    }
+  };
 
   if (!cartItems) {
     return <div className="text-red-500">No cart items found.</div>;
@@ -333,31 +352,51 @@ const CheckoutPage = () => {
           </div>
           {/* Add more payment methods here */}
         </div>
-        <h3 className="text-lg font-bold mb-4">Order Summary</h3>
-        <table className="table-auto w-full">
-          <tbody>
-            <tr>
-              <td>Subtotal</td>
-              <td>
-                {orderSummary.subtotal
-                  ? `$${orderSummary.subtotal.toFixed(2)}`
-                  : ""}
-              </td>
-            </tr>
-            <tr>
-              <td>Tax (8%)</td>
-              <td>
-                {orderSummary.tax ? `$${orderSummary.tax.toFixed(2)}` : ""}
-              </td>
-            </tr>
-            <tr>
-              <td>Total</td>
-              <td>
-                {orderSummary.total ? `$${orderSummary.total.toFixed(2)}` : ""}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* Coupon Code */}
+        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-bold mb-4">Have a Coupon?</h3>
+          <div className="flex">
+            <input
+              type="text"
+              className="flex-1 border rounded-lg p-2"
+              placeholder="Enter coupon code"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+            />
+            <Button onClick={applyCoupon} className="ml-4">
+              Apply Coupon
+            </Button>
+          </div>
+          {couponError && <p className="text-red-500 mt-2">{couponError}</p>}
+        </div>
+        {/* Order Summary */}
+        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-bold mb-4">Order Summary</h3>
+          <table className="w-full">
+            <tbody>
+              <tr>
+                <td className="py-2">Subtotal</td>
+                <td className="text-right">
+                  ${orderSummary.subtotal?.toFixed(2)}
+                </td>
+              </tr>
+              {discountAmount > 0 && (
+                <tr>
+                  <td className="py-2 text-green-500">Discount</td>
+                  <td className="text-right text-green-500">
+                    - ${discountAmount.toFixed(2)}
+                  </td>
+                </tr>
+              )}
+              <tr className="font-bold">
+                <td className="py-2">Total</td>
+                <td className="text-right">
+                  ${orderSummary.total?.toFixed(2)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <button
           onClick={handlePlaceOrder}
           className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full"

@@ -13,6 +13,8 @@ import addressRoutes from "./routes/address.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import walletRoutes from "./routes/wallet.routes.js";
+import couponRoutes from "./routes/coupon.routes.js";
+import offerRoutes from "./routes/offer.routes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -46,6 +48,8 @@ app.use("/api/cart", cartRoutes)
 app.use("/api/address", addressRoutes)
 app.use("/api/order", orderRoutes)
 app.use("/api/wallet", walletRoutes)
+app.use("/api/coupon", couponRoutes)
+app.use("/api/offer", offerRoutes)
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

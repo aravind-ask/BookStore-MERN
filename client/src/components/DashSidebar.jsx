@@ -136,6 +136,24 @@ export default function DashSidebar() {
                   Categories
                 </Sidebar.Item>
               </Link>
+              <Link to="/dashboard?tab=coupons">
+                <Sidebar.Item
+                  active={tab === "coupons"}
+                  icon={HiAnnotation}
+                  as="div"
+                >
+                  Coupons
+                </Sidebar.Item>
+              </Link>
+              <Link to="/dashboard?tab=offers">
+                <Sidebar.Item
+                  active={tab === "offers"}
+                  icon={HiAnnotation}
+                  as="div"
+                >
+                  Offers
+                </Sidebar.Item>
+              </Link>
             </>
           )}
           <Sidebar.Item

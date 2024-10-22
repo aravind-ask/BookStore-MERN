@@ -258,12 +258,24 @@ export default function PostPage() {
           </h1>
           <p className="text-gray-600 dark:text-gray-100 mb-2">{book.author}</p>
 
-          <div className="text-2xl font-bold text-red-500 mb-2">
-            {book.price ? `₹${book.price.toFixed(2)}` : "Price not available"}{" "}
-            {/* <span className="line-through text-gray-500">
-              ${book.originalPrice.toFixed(2)}
-            </span> */}
-          </div>
+          {book.discountedPrice < book.price ? (
+            <div>
+              <p>
+                <span className="line-through">₹{book.price.toFixed(2)}</span>{" "}
+                <span className="text-red-500">
+                  ₹{book.discountedPrice.toFixed(2)}
+                </span>
+              </p>
+              {book.bestOffer && (
+                <p className="text-green-500">
+                  {book.bestOffer.discountPercentage}% off:{" "}
+                  {book.bestOffer.title}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p>₹{book.price.toFixed(2)}</p>
+          )}
           <p className="text-gray-600 mb-2 dark:text-gray-100">
             Listed By:{" "}
             <span className="font-bold">{listedBy && listedBy.username}</span>

@@ -13,9 +13,23 @@ export const CartItems = ({ cartItems }) => {
             <div>
               <h4 className="text-lg font-bold mb-1">{item.title}</h4>
               <p className="text-gray-600">{item.author}</p>
+              <p className="text-gray-600">Quantity: {item.quantity}</p>{" "}
+              {/* Displaying quantity */}
             </div>
             <span className="ml-auto">
-              {item.quantity} x ${item.price}
+              {/* Show discounted price if applicable */}
+              {item.discountedPrice < item.price ? (
+                <>
+                  <span className="text-red-500 font-bold">
+                    ₹{item.discountedPrice}
+                  </span>
+                  <span className="line-through text-gray-500 ml-2">
+                    ₹{item.price.toFixed(2)}
+                  </span>
+                </>
+              ) : (
+                <span>₹{item.price.toFixed(2)}</span>
+              )}
             </span>
           </li>
         ))}

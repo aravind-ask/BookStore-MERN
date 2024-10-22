@@ -10,6 +10,8 @@ import DashCategory from "../components/DashCategory";
 import DashAddress from "../components/DashAddress";
 import OrderList from "../components/OrderList";
 import DashWallet from "../components/DashWallet";
+import DashCoupon from "../components/DashCoupons";
+import DashOffers from "../components/DashOffers";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -43,6 +45,10 @@ export default function Dashboard() {
       {tab === "wallet" && <DashWallet />}
       {/* categories  */}
       {tab === "categories" && <DashCategory />}
+      {/* Coupons  */}
+      {tab === "coupons" && <DashCoupon />}
+      {/* Offers  */}
+      {tab === "offers" && <DashOffers />}
       {/* dashboard comp */}
       {tab === "dash" && <DashboardComp />}
     </div>

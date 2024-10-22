@@ -14,7 +14,6 @@ const OrderList = () => {
 
   const { currentUser } = useSelector((state) => state.user);
   const { orders, isLoading, error } = useSelector((state) => state.order);
-
   const [showModal, setShowModal] = useState(false);
   const [cancelledOrderId, setCancelledOrderId] = useState("");
   const [cancelledItemId, setCancelledItemId] = useState("");
@@ -26,6 +25,7 @@ const OrderList = () => {
   useEffect(() => {
     if (currentUser) {
       dispatch(fetchOrders());
+      console.log(orders);
     }
   }, [dispatch, currentUser]);
 
@@ -145,7 +145,18 @@ const OrderList = () => {
                   </p>
                 </div>
                 <div>
-                  <Badge color="info">{order.orderSummary.status}</Badge>
+                  <p className="text-gray-600 mb-2">Payment Status</p>
+                  <Badge
+                    color={
+                      order.paymentStatus === "success"
+                        ? "success"
+                        : order.paymentStatus === "pending"
+                        ? "info"
+                        : "warning"
+                    }
+                  >
+                    {order.paymentStatus}
+                  </Badge>
                 </div>
               </div>
 
@@ -207,8 +218,9 @@ const OrderList = () => {
                         )}
                       </div>
                       <div>
-                        {(item.status !== "cancelled" &&
-                          item.status !== "delivered" && item.status!=="returned") && (
+                        {item.status !== "cancelled" &&
+                          item.status !== "delivered" &&
+                          item.status !== "returned" && (
                             <Button
                               color="failure"
                               size="xs"

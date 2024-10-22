@@ -2,6 +2,8 @@
 import express from "express";
 import { errorHandler } from "../utils/error.js";
 import Book from "../models/books.model.js";
+import Category from "../models/category.model.js";
+import Offer from "../models/offer.model.js";
 import jwt from "jsonwebtoken";
 
 // import  Category  from "../models/category.model.js";
@@ -104,10 +106,9 @@ export const getBooks = async (req, res, next) => {
     // Handle category filtering
     if (req.query.category) {
       if (req.query.category === "uncategorized") {
-        // No additional category filtering needed; return all books
-        // Simply omit the category filter
+        // No additional category filtering needed
       } else {
-        filter.category = req.query.category; // Apply the category filter for other cases
+        filter.category = req.query.category;
       }
     }
 
@@ -134,8 +135,48 @@ export const getBooks = async (req, res, next) => {
       createdAt: { $gte: oneMonthAgo },
     });
 
+    // Apply offers (Product & Category) for each book
+    const booksWithOffers = await Promise.all(
+      books.map(async (book) => {
+        // Fetch product-specific offers
+        const productOffers = await Offer.find({
+          applicableProducts: book._id,
+          isActive: true,
+        });
+
+        // Fetch category-specific offers
+        const categoryOffers = await Offer.find({
+          applicableCategory: book.category._id,
+          isActive: true,
+        });
+
+        // Determine the best offer (higher discount)
+        let discount = 0;
+        let bestOffer = null;
+
+        if (productOffers.length > 0) {
+          bestOffer = productOffers[0]; // Assume the first product offer
+          discount = bestOffer.discountPercentage;
+        } else if (categoryOffers.length > 0) {
+          bestOffer = categoryOffers[0]; // Assume the first category offer
+          discount = bestOffer.discountPercentage;
+        }
+
+        // Calculate discounted price if an offer exists
+        const discountedPrice = discount
+          ? book.price - (book.price * discount) / 100
+          : book.price;
+
+        return {
+          ...book._doc,
+          discountedPrice,
+          bestOffer,
+        };
+      })
+    );
+
     res.status(200).json({
-      books,
+      books: booksWithOffers, // Return books with offers applied
       totalBooks,
       lastMonthBooks,
       currentPage: page,
@@ -146,6 +187,7 @@ export const getBooks = async (req, res, next) => {
     next(error);
   }
 };
+
 
 
 export const deleteBook = async (req, res, next) => {
