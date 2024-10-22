@@ -6,6 +6,7 @@ import {
   HiOutlineUserGroup,
   HiAnnotation,
   HiChartPie,
+  HiCash,
 } from "react-icons/hi";
 import {
   FaHome,
@@ -155,6 +156,11 @@ export default function DashSidebar() {
                   as="div"
                 >
                   Offers
+                </Sidebar.Item>
+              </Link>
+              <Link to="/dashboard?tab=sales">
+                <Sidebar.Item active={tab === "sales"} icon={HiCash} as="div">
+                  Sales
                 </Sidebar.Item>
               </Link>
             </>

@@ -12,6 +12,7 @@ import OrderList from "../components/OrderList";
 import DashWallet from "../components/DashWallet";
 import DashCoupon from "../components/DashCoupons";
 import DashOffers from "../components/DashOffers";
+import DashSales from "../components/DashSales";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -49,6 +50,8 @@ export default function Dashboard() {
       {tab === "coupons" && <DashCoupon />}
       {/* Offers  */}
       {tab === "offers" && <DashOffers />}
+      {/* Offers  */}
+      {tab === "sales" && <DashSales />}
       {/* dashboard comp */}
       {tab === "dash" && <DashboardComp />}
     </div>
