@@ -13,6 +13,9 @@ import {
   FaShoppingCart,
   FaUser,
   FaWallet,
+  FaListAlt,
+  FaPercent, 
+  FaTicketAlt, 
 } from "react-icons/fa";
 
 import { useEffect, useState } from "react";
@@ -130,7 +133,7 @@ export default function DashSidebar() {
               <Link to="/dashboard?tab=categories">
                 <Sidebar.Item
                   active={tab === "categories"}
-                  icon={HiAnnotation}
+                  icon={FaListAlt}
                   as="div"
                 >
                   Categories
@@ -139,7 +142,7 @@ export default function DashSidebar() {
               <Link to="/dashboard?tab=coupons">
                 <Sidebar.Item
                   active={tab === "coupons"}
-                  icon={HiAnnotation}
+                  icon={FaTicketAlt}
                   as="div"
                 >
                   Coupons
@@ -148,7 +151,7 @@ export default function DashSidebar() {
               <Link to="/dashboard?tab=offers">
                 <Sidebar.Item
                   active={tab === "offers"}
-                  icon={HiAnnotation}
+                  icon={FaPercent}
                   as="div"
                 >
                   Offers

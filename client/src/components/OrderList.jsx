@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { Button, Modal, Card, Badge, Select, Toast } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import {
@@ -21,6 +22,7 @@ const OrderList = () => {
   const [returnReason, setReturnReason] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (currentUser) {
@@ -93,6 +95,10 @@ const OrderList = () => {
     filterStatus === "All" ? true : order.orderSummary.status === filterStatus
   );
 
+  const handleOrderClick = (orderId) => {
+    navigate(`/order/${orderId}`);
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-4">
       {/* Page Header */}
@@ -135,7 +141,10 @@ const OrderList = () => {
           {filteredOrders.map((order) => (
             <Card key={order._id} className="shadow-lg">
               {/* Order Header */}
-              <div className="flex justify-between items-center mb-4">
+              <div
+                className="flex justify-between items-center mb-4"
+                onClick={() => handleOrderClick(order._id)}
+              >
                 <div>
                   <Badge color="info" size="lg" className="text-lg">
                     Order No: {order.orderNumber}
@@ -145,7 +154,7 @@ const OrderList = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-600 mb-2">Payment Status</p>
+                  <p className="text-gray-600 mb">Payment Status</p>
                   <Badge
                     color={
                       order.paymentStatus === "success"
@@ -189,13 +198,14 @@ const OrderList = () => {
                         {currentUser.isAdmin ? (
                           <select
                             value={item.status}
-                            onChange={(e) =>
+                            onChange={(e) => {
                               handleStatusChange(
                                 order._id,
                                 item._id,
                                 e.target.value
-                              )
-                            }
+                              );
+                              e.stopPropagation(); // Prevent click from bubbling up
+                            }}
                             className="block w-full text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm"
                           >
                             <option value="pending">Pending</option>
@@ -224,7 +234,10 @@ const OrderList = () => {
                             <Button
                               color="failure"
                               size="xs"
-                              onClick={() => handleCancel(order._id, item._id)}
+                              onClick={(e) => {
+                                handleCancel(order._id, item._id);
+                                e.stopPropagation(); // Prevent click from bubbling up
+                              }}
                             >
                               Cancel
                             </Button>
@@ -233,7 +246,10 @@ const OrderList = () => {
                           <Button
                             color="failure"
                             size="xs"
-                            onClick={() => handleReturn(order._id, item._id)}
+                            onClick={(e) => {
+                              handleReturn(order._id, item._id);
+                              e.stopPropagation(); // Prevent click from bubbling up
+                            }}
                           >
                             Return
                           </Button>

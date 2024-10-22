@@ -225,6 +225,29 @@ export const getOrders = async (req, res, next) => {
   }
 };
 
+export const getOrderDetails = async (req, res, next) => {
+  try {
+    const orderId = req.params.orderId;
+    const order = await Order.findById(orderId)
+      .populate("userId", "name email")
+      .populate("addressId");
+
+    if (!order) {
+      return next(errorHandler(404, "Order not found"));
+    }
+
+    // Check if the user is authorized to view this order
+    if (!req.user.isAdmin && order.userId._id.toString() !== req.user.id) {
+      return next(errorHandler(403, "Not authorized to view this order"));
+    }
+
+    res.json(order);
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
 function generateOrderNumber() {
   const date = new Date();
   const year = date.getFullYear();

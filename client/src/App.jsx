@@ -20,6 +20,7 @@ import CheckOut from "./pages/CheckOut";
 import OrderSuccess from "./pages/OrderSuccess";
 import PasswordReset from "./components/PasswordReset";
 import Contact from "./pages/ContactUs";
+import OrderDetails from "./components/OrderDetails";
 
 export default function App() {
   return (
@@ -57,6 +58,7 @@ export default function App() {
           <Route path="/profile/cart" element={<CartPage />} />
           <Route path="/book/checkout" element={<CheckOut />} />
           <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/order/:orderId" element={<OrderDetails />} />
         </Route>
       </Routes>
       <Footer />

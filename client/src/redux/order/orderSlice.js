@@ -22,6 +22,18 @@ export const fetchOrders = createAsyncThunk("order/fetchOrders", async () => {
   return response.data;
 });
 
+export const fetchOrderDetails = createAsyncThunk(
+  "order/fetchOrderDetails",
+  async (orderId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`/api/order/${orderId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
+
 export const updateOrderStatus = createAsyncThunk(
   "order/updateOrderStatus",
   async ({ orderId, itemId, newStatus }) => {
@@ -150,8 +162,7 @@ const orderSlice = createSlice({
         state.error = null;
       })
       .addCase(returnOrderItem.fulfilled, (state, action) => {
-        const { orderId, itemId } =
-          action.payload;
+        const { orderId, itemId } = action.payload;
         const orderIndex = state.orders.findIndex(
           (order) => order._id === orderId
         );
@@ -167,11 +178,22 @@ const orderSlice = createSlice({
               new Date().toISOString();
           }
         }
-        // You might want to update the user's wallet balance in your user state as well
-        // state.user.walletBalance = newWal leteBalance;
       })
       .addCase(returnOrderItem.rejected, (state, action) => {
         state.error = action.payload.message;
+      })
+      .addCase(fetchOrderDetails.pending, (state) => {
+        state.isLoadingDetails = true;
+        state.errorDetails = null;
+      })
+      .addCase(fetchOrderDetails.fulfilled, (state, action) => {
+        state.isLoadingDetails = false;
+        state.orderDetails = action.payload;
+        state.errorDetails = null;
+      })
+      .addCase(fetchOrderDetails.rejected, (state, action) => {
+        state.isLoadingDetails = false;
+        state.errorDetails = action.payload;
       });
   },
 });
