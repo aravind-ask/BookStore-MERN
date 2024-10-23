@@ -64,7 +64,7 @@ export const editAddress = async (req, res, next) => {
     }
     res.status(200).json({ success: true, data: address });
   } catch (error) {
-    console.log(error); 
+    console.log(error);
     next(error);
   }
 };

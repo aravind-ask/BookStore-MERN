@@ -19,7 +19,7 @@ export const createNewOrder = createAsyncThunk(
 
 export const fetchOrders = createAsyncThunk("order/fetchOrders", async () => {
   const response = await axios.get(`/api/order`);
-  return response.data;
+  return response.data.orders;
 });
 
 export const fetchOrderDetails = createAsyncThunk(

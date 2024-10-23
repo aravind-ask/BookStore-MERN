@@ -34,11 +34,11 @@ export const getSalesReport =  async (req, res, next) => {
      0
    );
    const totalDiscounts = orders.reduce(
-     (sum, order) => sum + (order.orderSummary.discount || 0),
+     (sum, order) => sum + (order.orderSummary.totalDiscount || 0),
      0
    );
    const totalCoupons = orders.reduce(
-     (sum, order) => sum + (order.orderSummary.couponAmount || 0),
+     (sum, order) => sum + (order.orderSummary.discount || 0),
      0
    );
 

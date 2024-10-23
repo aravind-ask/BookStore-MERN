@@ -26,6 +26,12 @@ export const CartItems = ({ cartItems }) => {
                   <span className="line-through text-gray-500 ml-2">
                     ₹{item.price.toFixed(2)}
                   </span>
+                  <p className="text-gray-600">
+                    Offer Applied:{" "}
+                    <span className="text-red-500 font-semibold">
+                      {item.offerName}
+                    </span>
+                  </p>
                 </>
               ) : (
                 <span>₹{item.price.toFixed(2)}</span>

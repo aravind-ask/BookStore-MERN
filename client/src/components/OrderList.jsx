@@ -27,7 +27,7 @@ const OrderList = () => {
   useEffect(() => {
     if (currentUser) {
       dispatch(fetchOrders());
-      console.log(orders);
+      console.log("orders",orders);
     }
   }, [dispatch, currentUser]);
 
@@ -86,6 +86,7 @@ const OrderList = () => {
   };
 
   // Sorting orders by most recent first
+  console.log("Orders:", orders);
   const sortedOrders = [...(orders || [])].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
@@ -125,12 +126,12 @@ const OrderList = () => {
               <option value="shipped">Shipped</option>
             </Select>
           </div>
-          <div className="text-right">
+          {/* <div className="text-right">
             <p className="text-3xl font-bold text-blue-600">{orders.length}</p>
             <Badge color="success" className="mt-2">
               Total Orders
             </Badge>
-          </div>
+          </div> */}
         </div>
       </Card>
 

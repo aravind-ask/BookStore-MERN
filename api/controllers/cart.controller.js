@@ -60,6 +60,7 @@ export const getCart = async (req, res, next) => {
         const book = item.bookId;
 
         let discountedPrice = book.price; // Default to original price
+        let offerName = null;
 
         // Fetch active product offers
         const productOffers = await Offer.find({
@@ -82,9 +83,11 @@ export const getCart = async (req, res, next) => {
         if (productOffers.length > 0) {
           bestOffer = productOffers[0]; // Assume the first product offer
           discount = bestOffer.discountPercentage;
+          offerName = bestOffer.title;
         } else if (categoryOffers.length > 0) {
           bestOffer = categoryOffers[0]; // Assume the first category offer
           discount = bestOffer.discountPercentage;
+          offerName = bestOffer.title;
         }
 
         // Calculate discounted price if an offer exists
@@ -98,6 +101,7 @@ export const getCart = async (req, res, next) => {
           author: book ? book.author : null,
           price: book ? book.price : null,
           discountedPrice: discountedPrice.toFixed(2), // Include the discounted price
+          offerName: offerName, // Include the offer name
           stock: book ? book.stock : null,
           images: book ? book.images : null,
           slug: book ? book.slug : null,

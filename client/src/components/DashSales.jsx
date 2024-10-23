@@ -36,6 +36,7 @@ export default function DashSales() {
 
       const response = await axios.get(`/api/sales/report${queryParams}`);
       setReportData(response.data);
+      console.log(response.data);
     } catch (err) {
       setError("Failed to fetch report.");
     } finally {
@@ -188,7 +189,7 @@ export default function DashSales() {
             {/* Total Sales */}
             <Card className="shadow-md hover:shadow-lg transition-all">
               <div className="flex items-center">
-                <FaMoneyBillWave className="text-4xl text-green-500 mr-4" />
+                <FaChartLine className="text-4xl text-green-500 mr-4" />
                 <div>
                   <h3 className="text-lg font-bold">Total Sales</h3>
                   <p className="text-xl text-gray-700">
@@ -214,7 +215,7 @@ export default function DashSales() {
             {/* Coupon Deductions */}
             <Card className="shadow-md hover:shadow-lg transition-all">
               <div className="flex items-center">
-                <FaShoppingCart className="text-4xl text-blue-500 mr-4" />
+                <FaMoneyBillWave className="text-4xl text-blue-500 mr-4" />
                 <div>
                   <h3 className="text-lg font-bold">Coupon Deductions</h3>
                   <p className="text-xl text-gray-700">
@@ -227,7 +228,7 @@ export default function DashSales() {
             {/* Total Orders */}
             <Card className="shadow-md hover:shadow-lg transition-all">
               <div className="flex items-center">
-                <FaChartLine className="text-4xl text-purple-500 mr-4" />
+                <FaShoppingCart className="text-4xl text-purple-500 mr-4" />
                 <div>
                   <h3 className="text-lg font-bold">Total Orders</h3>
                   <p className="text-xl text-gray-700">
@@ -243,7 +244,7 @@ export default function DashSales() {
             <Table.Head>
               <Table.HeadCell>Order No</Table.HeadCell>
               <Table.HeadCell>Total Amount</Table.HeadCell>
-              <Table.HeadCell>Discount</Table.HeadCell>
+              <Table.HeadCell>Total Discount</Table.HeadCell>
               <Table.HeadCell>Coupon Deduction</Table.HeadCell>
               <Table.HeadCell>Date</Table.HeadCell>
             </Table.Head>
@@ -255,10 +256,21 @@ export default function DashSales() {
                     ₹{order.orderSummary.total.toFixed(2)}
                   </Table.Cell>
                   <Table.Cell>
-                    ₹{order.orderSummary.discount?.toFixed(2)}
+                    {order.orderSummary.totalDiscount ? (
+                      <>₹ {order.orderSummary.totalDiscount.toFixed(2)}</>
+                    ) : (
+                      <span>Nil</span>
+                    )}
                   </Table.Cell>
-                  <Table.Cell>
-                    ₹{order.orderSummary.couponAmount?.toFixed(2)}
+                  <Table.Cell className="flex gap-2">
+                    {order.orderSummary.discount ? (
+                      <>
+                        <span>{order.orderSummary.coupon}:</span>
+                        <span>₹ {order.orderSummary.discount.toFixed(2)}</span>
+                      </>
+                    ) : (
+                      <span>Nil</span>
+                    )}
                   </Table.Cell>
                   <Table.Cell>
                     {new Date(order.createdAt).toLocaleDateString()}

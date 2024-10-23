@@ -54,15 +54,10 @@ export const placeOrder = async (req, res, next) => {
           discount = categoryOffers[0].discountPercentage;
         }
 
-        // Apply discount to the price
         if (discount > 0) {
           finalPrice = book.price - (book.price * discount) / 100;
         }
-        if(orderSummary.discount>0){
-          finalPrice -= orderSummary.discount
-        }
 
-        // Update the cart item with the final price and discount
         updatedCartItems.push({
           ...item,
           price: finalPrice,
@@ -70,7 +65,6 @@ export const placeOrder = async (req, res, next) => {
         });
       }
     }
-
     if (outOfStockItems.length > 0) {
       return next(
         errorHandler(
@@ -79,10 +73,16 @@ export const placeOrder = async (req, res, next) => {
         )
       );
     }
+    let totalAmountWithOffers = updatedCartItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    if (orderSummary.discount) {
+      totalAmountWithOffers -= orderSummary.discount;
+    }
 
-    // Step 3: Handle different payment methods
     if (paymentMethod === "COD") {
-      const orderNumber = generateOrderNumber(); // Generate a unique order number
+      const orderNumber = generateOrderNumber();
       const order = new Order({
         orderNumber,
         userId: req.user.id,
@@ -91,8 +91,8 @@ export const placeOrder = async (req, res, next) => {
           bookId: item.bookId,
           book: item.title,
           images: item.images,
-          price: item.price, // Price after applying offers
-          discount: item.discount, // Applied discount
+          price: item.price,
+          discount: item.discount,
           quantity: item.quantity,
           status: item.status,
           orderDate: new Date(),
@@ -101,10 +101,7 @@ export const placeOrder = async (req, res, next) => {
         paymentMethod,
         orderSummary: {
           ...orderSummary,
-          total: updatedCartItems.reduce(
-            (sum, item) => sum + item.price * item.quantity,
-            0
-          ), // Updated total with offers
+          total: totalAmountWithOffers,
         },
       });
 
@@ -119,12 +116,6 @@ export const placeOrder = async (req, res, next) => {
       await order.save();
       res.json({ message: "Order placed successfully" });
     } else if (paymentMethod === "Razorpay") {
-      // Calculate total amount with applied offers
-      const totalAmountWithOffers = updatedCartItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      );
-
       console.log("Razorpay amount:", Math.round(totalAmountWithOffers * 100));
       const options = {
         amount: Math.round(totalAmountWithOffers * 100), // Convert to paise and round to ensure it's an integer
@@ -150,7 +141,7 @@ export const placeOrder = async (req, res, next) => {
           status: item.status,
           orderDate: new Date(),
         })),
-        address: selectedAddress,
+        addressId: selectedAddress._id,
         paymentMethod,
         razorpayOrderId: razorpayOrder.id,
         paymentStatus: "pending",
@@ -208,9 +199,27 @@ export const verifyPayment = async (req, res, next) => {
 export const getOrders = async (req, res, next) => {
   try {
     let orders;
+    let totalOrders;
+    let lastMonthOrders;
+    const limit = parseInt(req.query.limit) || 9;
     if (req.user.isAdmin) {
       // If the user is an admin, retrieve all orders
-      orders = await Order.find().populate("userId").populate("addressId");
+      orders = await Order.find()
+        .populate("userId")
+        .populate("addressId")
+        .limit(limit);
+
+      totalOrders = await Order.countDocuments();
+
+      const now = new Date();
+      const oneMonthAgo = new Date(
+        now.getFullYear(),
+        now.getMonth() - 1,
+        now.getDate()
+      );
+      lastMonthOrders = await Order.countDocuments({
+        createdAt: { $gte: oneMonthAgo },
+      });
     } else {
       // If the user is not an admin, retrieve orders for the specified user ID
       const userId = req.user.id;
@@ -218,7 +227,11 @@ export const getOrders = async (req, res, next) => {
         .populate("userId")
         .populate("addressId");
     }
-    res.json(orders);
+    res.json({
+      orders: orders,
+      lastMonthOrders: lastMonthOrders,
+      totalOrders: totalOrders,
+    });
   } catch (error) {
     console.log(error);
     next(error);
@@ -240,7 +253,7 @@ export const getOrderDetails = async (req, res, next) => {
     if (!req.user.isAdmin && order.userId._id.toString() !== req.user.id) {
       return next(errorHandler(403, "Not authorized to view this order"));
     }
-
+    console.log(order)
     res.json(order);
   } catch (error) {
     console.log(error);
@@ -330,9 +343,11 @@ export const applyCoupon = async (req, res, next) => {
     //   { new: true }
     // );
 
-    res
-      .status(200)
-      .json({ message: "Coupon applied successfully", discountAmount, coupon: coupon._id });
+    res.status(200).json({
+      message: "Coupon applied successfully",
+      discountAmount,
+      coupon: coupon._id,
+    });
   } catch (error) {
     console.log(error);
     next(error);

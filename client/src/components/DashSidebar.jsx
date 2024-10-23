@@ -16,7 +16,8 @@ import {
   FaWallet,
   FaListAlt,
   FaPercent, 
-  FaTicketAlt, 
+  FaTicketAlt,
+  FaChartLine, 
 } from "react-icons/fa";
 
 import { useEffect, useState } from "react";
@@ -159,7 +160,11 @@ export default function DashSidebar() {
                 </Sidebar.Item>
               </Link>
               <Link to="/dashboard?tab=sales">
-                <Sidebar.Item active={tab === "sales"} icon={HiCash} as="div">
+                <Sidebar.Item
+                  active={tab === "sales"}
+                  icon={FaChartLine}
+                  as="div"
+                >
                   Sales
                 </Sidebar.Item>
               </Link>

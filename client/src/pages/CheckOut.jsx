@@ -207,11 +207,26 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (cartItems && cartItems.items) {
       const subtotal = cartItems.items.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
+      const offerPrice = cartItems.items.reduce(
         (sum, item) => sum + item.discountedPrice * item.quantity,
         0
       );
-      const total = subtotal  - discountAmount;
-      setOrderSummary({ subtotal, total, discount: discountAmount, coupon: couponCode });
+      let finalAmount = offerPrice;
+      if (discountAmount) {
+        finalAmount -= discountAmount;
+      }
+      const totalDiscount = subtotal - finalAmount;
+      setOrderSummary({
+        subtotal,
+        offerPrice,
+        totalDiscount,
+        total: finalAmount,
+        discount: discountAmount,
+        coupon: couponCode,
+      });
     }
   }, [cartItems, discountAmount]);
 
@@ -375,14 +390,23 @@ const CheckoutPage = () => {
           <table className="w-full">
             <tbody>
               <tr>
-                <td className="py-2">Subtotal</td>
+                <td className="py-2">Cart Total</td>
                 <td className="text-right">
                   ${orderSummary.subtotal?.toFixed(2)}
                 </td>
               </tr>
+              {orderSummary.subtotal > orderSummary.offerPrice && (
+                <tr>
+                  <td className="py-2">Offer Price</td>
+                  <td className="text-right">
+                    ${orderSummary.offerPrice?.toFixed(2)}
+                  </td>
+                </tr>
+              )}
+
               {discountAmount > 0 && (
                 <tr>
-                  <td className="py-2 text-green-500">Discount</td>
+                  <td className="py-2 text-green-500">Coupon Discount</td>
                   <td className="text-right text-green-500">
                     - ${discountAmount.toFixed(2)}
                   </td>

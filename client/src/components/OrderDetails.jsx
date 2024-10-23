@@ -28,6 +28,7 @@ const OrderDetails = () => {
       }
     }
     loadOrderDetails();
+    console.log(orderDetails)
   }, [dispatch, orderId]);
 
   if (loading) {
@@ -152,6 +153,22 @@ const OrderDetails = () => {
                   : "0.00"}
               </span>
             </div>
+            <div className="flex justify-between font-bold">
+              <span>Razorpay Payment ID</span>
+              <span>
+                {orderDetails?.paymentMethod === "Razorpay" && (
+                  <span>{orderDetails.razorpayOrderId}</span>
+                )}
+              </span>
+            </div>
+            <div className="flex justify-between font-bold">
+              <span>Payment Method</span>
+              <span>{orderDetails?.paymentMethod}</span>
+            </div>
+            <div className="flex justify-between font-bold">
+              <span>Payment Status</span>
+              <span>{orderDetails?.paymentStatus}</span>
+            </div>
           </div>
         </Card>
 
@@ -159,14 +176,14 @@ const OrderDetails = () => {
         <Card className="p-6 shadow-md">
           <h3 className="text-xl font-semibold mb-4">Shipping Address</h3>
           <div className="space-y-2">
-            <p>{orderDetails?.address?.name || "N/A"}</p>
+            <p>{orderDetails?.addressId?.name || "N/A"}</p>
             <p>
-              {orderDetails?.address?.address || "N/A"},{" "}
-              {orderDetails?.address?.city || "N/A"}{" "}
-              {orderDetails?.address?.state || "N/A"}{" "}
-              {orderDetails?.address?.pinCode || "N/A"}
+              {orderDetails?.addressId?.address || "N/A"},{" "}
+              {orderDetails?.addressId?.city || "N/A"}{" "}
+              {orderDetails?.addressId?.state || "N/A"}{" "}
+              {orderDetails?.addressId?.pinCode || "N/A"}
             </p>
-            <p>Phone: {orderDetails?.address?.phone || "N/A"}</p>
+            <p>Phone: {orderDetails?.addressId?.phone || "N/A"}</p>
           </div>
         </Card>
 
@@ -192,7 +209,10 @@ const OrderDetails = () => {
               Return Order
             </Button>
           )}
-          <Button color="gray" onClick={() => navigate("/dashboard?tab=orders")}>
+          <Button
+            color="gray"
+            onClick={() => navigate("/dashboard?tab=orders")}
+          >
             Back to Orders
           </Button>
         </div>
