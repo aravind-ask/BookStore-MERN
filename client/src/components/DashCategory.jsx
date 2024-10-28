@@ -34,6 +34,17 @@ export default function DashCategory() {
       setAddError("Category name is required");
       return;
     }
+
+    // Check for duplicate category (case-insensitive)
+    const categoryExists = categories.some(
+      (category) => category.name.toLowerCase() === newCategory.toLowerCase()
+    );
+
+    if (categoryExists) {
+      setAddError("Category already exists");
+      return;
+    }
+
     try {
       const response = await fetch("/api/category/add-category", {
         method: "POST",
@@ -42,11 +53,27 @@ export default function DashCategory() {
         },
         body: JSON.stringify({ name: newCategory, description }),
       });
+
+      // Check if the response is OK
+      if (!response.ok) {
+        throw new Error("Failed to add category");
+      }
+
+      // Parse the response data
       const data = await response.json();
-      setCategories([...categories, data]);
-      setNewCategory("");
-      setDescription("");
-      setAddError(null);
+      console.log(data);
+
+
+      // Ensure the returned data has the expected structure
+      if (data.data && data.data.name && data.data.description) {
+        // Update the categories state with the new category
+        setCategories([...categories, data.data]);
+        setNewCategory("");
+        setDescription("");
+        setAddError(null);
+      } else {
+        setAddError("Invalid response from server");
+      }
     } catch (error) {
       console.error(error);
       setAddError("Failed to add category");

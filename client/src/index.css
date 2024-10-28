@@ -4,3 +4,15 @@
 @tailwind utilities;
 
 
+.tooltip {
+  transition: opacity 0.3s ease;
+  visibility: hidden;
+}
+
+.tooltip-visible {
+  visibility: visible;
+}
+
+.disabled-shade{
+    opacity: 0.5;
+}

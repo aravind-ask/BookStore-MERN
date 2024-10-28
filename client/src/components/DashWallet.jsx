@@ -42,7 +42,7 @@ export default function DashWallet() {
           <div className="text-right">
             <p className="text-sm text-gray-500">Current Balance:</p>
             <p className="text-3xl font-bold text-blue-600">
-              ${balance.toFixed(2)}
+              ₹{balance.toFixed(2)}
             </p>
             <Badge color="success" className="mt-2">
               Active

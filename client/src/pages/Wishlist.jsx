@@ -26,6 +26,29 @@ export default function Wishlist() {
     fetchWishlist();
   }, []);
 
+  const removeFromWishlist = async (bookId) => {
+    try {
+      const response = await fetch(`/api/wishlist/remove`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bookId, userId: currentUser._id }),
+      });
+
+      if (response.ok) {
+        // Update the wishlist state to remove the book
+        setWishlist((prevWishlist) =>
+          prevWishlist.filter((book) => book._id !== bookId)
+        );
+      } else {
+        console.error("Failed to remove the book from wishlist");
+      }
+    } catch (error) {
+      console.error("Error removing book from wishlist:", error);
+    }
+  };
+
   return (
     <div className="p-8">
       <nav className="flex mt-8 mb-8">
@@ -67,7 +90,14 @@ export default function Wishlist() {
         {loading ? (
           <p className="text-xl text-gray-500">Loading...</p>
         ) : (
-          wishlist.map((book) => <BookCard key={book._id} book={book} />)
+          wishlist.map((book) => (
+            <BookCard
+              key={book._id}
+              book={book}
+              removeFromWishlist={removeFromWishlist}
+              isWishlistPage={true}
+            />
+          ))
         )}
       </div>
     </div>

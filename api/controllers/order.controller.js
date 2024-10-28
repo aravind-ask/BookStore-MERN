@@ -82,6 +82,11 @@ export const placeOrder = async (req, res, next) => {
     }
 
     if (paymentMethod === "COD") {
+      if (totalAmountWithOffers < 1000) {
+        return next(
+          errorHandler(400, "COD is not available for orders below ₹1000")
+        );
+      }
       const orderNumber = generateOrderNumber();
       const order = new Order({
         orderNumber,
@@ -170,8 +175,12 @@ export const placeOrder = async (req, res, next) => {
 
 export const verifyPayment = async (req, res, next) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      req.body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      items,
+    } = req.body;
 
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSign = crypto
@@ -185,6 +194,13 @@ export const verifyPayment = async (req, res, next) => {
         { razorpayOrderId: razorpay_order_id },
         { paymentStatus: "success", razorpayPaymentId: razorpay_payment_id }
       );
+      //update the book stock
+      items.forEach(async (item) => {
+        await Book.updateOne(
+          { _id: item.bookId },
+          { $inc: { stock: -item.quantity } }
+        );
+      });
 
       return res.status(200).json({ message: "Payment verified successfully" });
     } else {
@@ -253,7 +269,7 @@ export const getOrderDetails = async (req, res, next) => {
     if (!req.user.isAdmin && order.userId._id.toString() !== req.user.id) {
       return next(errorHandler(403, "Not authorized to view this order"));
     }
-    console.log(order)
+    console.log(order);
     res.json(order);
   } catch (error) {
     console.log(error);

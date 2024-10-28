@@ -27,7 +27,7 @@ const OrderList = () => {
   useEffect(() => {
     if (currentUser) {
       dispatch(fetchOrders());
-      console.log("orders",orders);
+      console.log("orders", orders);
     }
   }, [dispatch, currentUser]);
 
@@ -151,7 +151,7 @@ const OrderList = () => {
                     Order No: {order.orderNumber}
                   </Badge>
                   <p className="text-gray-600 mt-2">
-                    Total: ${order.orderSummary.total.toFixed(2)}
+                    Total: ₹{order.orderSummary.total.toFixed(2)}
                   </p>
                 </div>
                 <div>
@@ -188,7 +188,7 @@ const OrderList = () => {
                           Quantity: {item.quantity}
                         </p>
                         <p className="text-sm text-gray-500">
-                          Price: ${item.price.toFixed(2)}
+                          Price: ₹{item.price.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -243,18 +243,19 @@ const OrderList = () => {
                               Cancel
                             </Button>
                           )}
-                        {item.status === "delivered" && (
-                          <Button
-                            color="failure"
-                            size="xs"
-                            onClick={(e) => {
-                              handleReturn(order._id, item._id);
-                              e.stopPropagation(); // Prevent click from bubbling up
-                            }}
-                          >
-                            Return
-                          </Button>
-                        )}
+                        {item.status === "delivered" &&
+                          !currentUser.isAdmin && (
+                            <Button
+                              color="failure"
+                              size="xs"
+                              onClick={(e) => {
+                                handleReturn(order._id, item._id);
+                                e.stopPropagation(); // Prevent click from bubbling up
+                              }}
+                            >
+                              Return
+                            </Button>
+                          )}
                       </div>
                     </div>
                   </Card>

@@ -39,3 +39,20 @@ export const getWishlist = async (req, res, next) => {
     next(error);
   }
 };
+
+
+export const removeFromWishlist = async (req, res, next) => {
+  try {
+    const { bookId, userId } = req.body; // Expecting bookId and userId in the request body
+    const removedItem = await Wishlist.findByIdAndDelete({ bookId, userId });
+
+    if (!removedItem) {
+      return next(errorHandler(404, "Book not found in wishlist"));
+    }
+
+    res.status(200).json("Book removed from wishlist");
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};

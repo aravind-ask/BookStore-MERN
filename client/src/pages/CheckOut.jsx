@@ -47,11 +47,28 @@ const CheckoutPage = () => {
   const [addressToEdit, setAddressToEdit] = useState({});
   const [error, setError] = useState("");
   const [paymentStart, setPayamentStart] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   console.log("prp", cartItems);
+
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const response = await axios.get("/api/coupon"); // Adjust the endpoint as necessary
+        setAvailableCoupons(response.data);
+        console.log("c:",response.data);
+      } catch (error) {
+        console.error("Error fetching coupons:", error);
+      }
+    };
+
+    fetchCoupons();
+  }, []);
 
   useEffect(() => {
     dispatch(fetchAddress(currentUser._id));
@@ -96,6 +113,10 @@ const CheckoutPage = () => {
 
     try {
       const response = await dispatch(createNewOrder(orderData));
+      if (response.error) {
+        setError(response.error.message); // Set the error message from the response
+        return; // Exit the function if there's an error
+      }
 
       if (paymentMethod === "Razorpay") {
         if (typeof window.Razorpay === "undefined") {
@@ -123,6 +144,7 @@ const CheckoutPage = () => {
                   razorpay_order_id: response.razorpay_order_id,
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
+                  items: orderData.cartItems.items,
                 }
               );
 
@@ -256,6 +278,7 @@ const CheckoutPage = () => {
   return (
     <div className="max-w-4xl mx-auto p-4 pt-6">
       <h2 className="text-2xl font-bold mb-4">Checkout</h2>
+      {error && <p className="text-red-500 mt-2">{error}</p>}
       <div className="bg-white rounded shadow-md p-4">
         <CartItems cartItems={cartItems} />
         <h3 className="text-lg font-bold mb-4">Shipping Address</h3>
@@ -339,17 +362,32 @@ const CheckoutPage = () => {
               <span className="ml-2">Debit Card</span>
             </div>
           </div> */}
-          <div className="flex items-center gap-5 w-full md:w-1/2 xl:w-1/3 p-4 mb-4">
+          <div
+            className={`flex items-center gap-5 w-full md:w-1/2 xl:w-1/3 p-4 mb-4 ${
+              orderSummary.total < 1000 ? "disabled-shade" : ""
+            }`}
+          >
             <input
               type="radio"
               name="paymentMethod"
               value="COD"
-              //   checked={paymentMethod === "cash_on_delivery"}
+              disabled={orderSummary.total < 1000}
               onClick={() => handlePaymentMethodChange("COD")}
+              className={orderSummary.total < 1000 ? "cursor-not-allowed" : ""}
             />
-            <div className="flex items-center">
+            <div
+              className="flex items-center relative"
+              onMouseEnter={() => setShowTooltip(true)} // Show tooltip on hover
+              onMouseLeave={() => setShowTooltip(false)}
+            >
               <FontAwesomeIcon icon={faMoneyBill} size="lg" />
               <span className="ml-2">Cash on Delivery</span>
+              {orderSummary.total < 1000 &&
+                showTooltip && ( // Show tooltip only when hovering
+                  <span className="absolute left-0 -top-6 bg-gray-700 text-white text-xs rounded p-1 opacity-75">
+                    Cash on delivery is available on orders above ₹1000
+                  </span>
+                )}
             </div>
           </div>
           <div className="flex items-center gap-5 w-full md:w-1/2 xl:w-1/3 p-4 mb-4">
@@ -369,6 +407,15 @@ const CheckoutPage = () => {
         </div>
         {/* Coupon Code */}
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+          <h3 className="text-lg font-bold mb-4">Available Coupons</h3>
+          <ul>
+            {availableCoupons.map((coupon) => (
+              <li key={coupon.code} className="py-2">
+                <span className="font-semibold">{coupon.code}</span>:{" "}
+                {coupon.discount}%
+              </li>
+            ))}
+          </ul>
           <h3 className="text-lg font-bold mb-4">Have a Coupon?</h3>
           <div className="flex">
             <input
@@ -392,14 +439,14 @@ const CheckoutPage = () => {
               <tr>
                 <td className="py-2">Cart Total</td>
                 <td className="text-right">
-                  ${orderSummary.subtotal?.toFixed(2)}
+                  ₹{orderSummary.subtotal?.toFixed(2)}
                 </td>
               </tr>
               {orderSummary.subtotal > orderSummary.offerPrice && (
                 <tr>
                   <td className="py-2">Offer Price</td>
                   <td className="text-right">
-                    ${orderSummary.offerPrice?.toFixed(2)}
+                    ₹{orderSummary.offerPrice?.toFixed(2)}
                   </td>
                 </tr>
               )}
@@ -408,14 +455,14 @@ const CheckoutPage = () => {
                 <tr>
                   <td className="py-2 text-green-500">Coupon Discount</td>
                   <td className="text-right text-green-500">
-                    - ${discountAmount.toFixed(2)}
+                    - ₹{discountAmount.toFixed(2)}
                   </td>
                 </tr>
               )}
               <tr className="font-bold">
                 <td className="py-2">Total</td>
                 <td className="text-right">
-                  ${orderSummary.total?.toFixed(2)}
+                  ₹{orderSummary.total?.toFixed(2)}
                 </td>
               </tr>
             </tbody>

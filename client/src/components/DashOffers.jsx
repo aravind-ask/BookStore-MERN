@@ -240,9 +240,9 @@ export default function DashOffers() {
                 )}
               </Table.Cell>
               <Table.Cell className="flex gap-5">
-                <Button size="xs" onClick={() => handleEditOffer(offer)}>
+                {/* <Button size="xs" onClick={() => handleEditOffer(offer)}>
                   <HiPencilAlt />
-                </Button>
+                </Button> */}
                 <Button
                   size="xs"
                   color="failure"
