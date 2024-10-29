@@ -5,6 +5,7 @@ import Coupon from "../models/coupon.model.js";
 import Offer from "../models/offer.model.js";
 import { errorHandler } from "../utils/error.js";
 import Razorpay from "razorpay";
+import { PDFDocument, rgb } from "pdf-lib";
 import crypto from "crypto";
 import dotenv from "dotenv";
 dotenv.config();
@@ -119,7 +120,10 @@ export const placeOrder = async (req, res, next) => {
       });
 
       await order.save();
-      res.json({ message: "Order placed successfully" });
+      res.json({
+        orderNo: order.orderNumber,
+        message: "Order placed successfully",
+      });
     } else if (paymentMethod === "Razorpay") {
       console.log("Razorpay amount:", Math.round(totalAmountWithOffers * 100));
       const options = {
@@ -162,6 +166,7 @@ export const placeOrder = async (req, res, next) => {
         success: true,
         order: razorpayOrder,
         orderId: newOrder._id,
+        orderNo: newOrder.orderNumber,
         key: process.env.RAZORPAY_KEY_ID,
       });
     } else {
@@ -273,6 +278,96 @@ export const getOrderDetails = async (req, res, next) => {
     res.json(order);
   } catch (error) {
     console.log(error);
+    next(error);
+  }
+};
+
+export const generateInvoice = async (req, res, next) => {
+  try {
+    const { orderNumber } = req.params;
+
+    // Fetch order details from the database
+    const order = await Order.findById(orderNumber)
+      .populate("userId")
+      .populate("addressId");
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    console.log(order);
+
+    // Create a new PDF document
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([600, 800]);
+
+    // Set basic document styling
+    page.drawText(`Invoice #${order.orderNumber}`, {
+      x: 50,
+      y: 750,
+      size: 20,
+      color: rgb(0, 0.53, 0.71),
+    });
+    page.drawText(`Date: ${new Date(order.orderDate).toLocaleDateString()}`, {
+      x: 50,
+      y: 720,
+      size: 12,
+    });
+
+    page.drawText(`Bill To: ${order.userId.username}`, {
+      x: 50,
+      y: 690,
+      size: 12,
+    });
+    page.drawText(
+      `Address: ${order.addressId.address}, ${order.addressId.city}, ${order.addressId.state}, ${order.addressId.pinCode}, ${order.addressId.phone}`,
+      {
+        x: 50,
+        y: 670,
+        size: 12,
+      }
+    );
+
+    // Render each cart item in the order
+    let yOffset = 630;
+    order.cartItems.forEach((item) => {
+      page.drawText(`${item.book} x${item.quantity}`, {
+        x: 50,
+        y: yOffset,
+        size: 12,
+      });
+      page.drawText(`Price: INR ${item.price}`, {
+        x: 400,
+        y: yOffset,
+        size: 12,
+      });
+      yOffset -= 20;
+    });
+
+    // Add the total amount at the end
+    page.drawText(`Subtotal: INR ${order.orderSummary.subtotal}`, {
+      x: 50,
+      y: yOffset - 20,
+      size: 12,
+    });
+    page.drawText(`Discount: INR ${order.orderSummary.totalDiscount || 0}`, {
+      x: 50,
+      y: yOffset - 40,
+      size: 12,
+    });
+    page.drawText(`Total: INR ${order.orderSummary.total}`, {
+      x: 50,
+      y: yOffset - 60,
+      size: 14,
+      color: rgb(0.95, 0.1, 0.1),
+    });
+
+    // Serialize PDF to a Buffer and send it as a response
+    const pdfBytes = await pdfDoc.save();
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="invoice_${order.orderNumber}.pdf"`
+    );
+    res.send(Buffer.from(pdfBytes, "binary"));
+  } catch (error) {
+    console.error(error);
     next(error);
   }
 };
