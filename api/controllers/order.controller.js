@@ -304,7 +304,7 @@ export const generateInvoice = async (req, res, next) => {
       size: 20,
       color: rgb(0, 0.53, 0.71),
     });
-    page.drawText(`Date: ${new Date(order.orderDate).toLocaleDateString()}`, {
+    page.drawText(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, {
       x: 50,
       y: 720,
       size: 12,
