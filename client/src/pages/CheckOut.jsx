@@ -48,6 +48,8 @@ const CheckoutPage = () => {
   const [error, setError] = useState("");
   const [paymentStart, setPayamentStart] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [orderId, setOrderId] = useState(null);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -61,7 +63,7 @@ const CheckoutPage = () => {
       try {
         const response = await axios.get("/api/coupon"); // Adjust the endpoint as necessary
         setAvailableCoupons(response.data);
-        console.log("c:",response.data);
+        console.log("c:", response.data);
       } catch (error) {
         console.error("Error fetching coupons:", error);
       }
@@ -117,6 +119,7 @@ const CheckoutPage = () => {
         setError(response.error.message); // Set the error message from the response
         return; // Exit the function if there's an error
       }
+      setOrderId(response.payload.orderNo);
 
       if (paymentMethod === "Razorpay") {
         if (typeof window.Razorpay === "undefined") {
@@ -145,14 +148,16 @@ const CheckoutPage = () => {
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_signature: response.razorpay_signature,
                   items: orderData.cartItems.items,
+                  orderNo: orderData.orderNumber,
                 }
               );
 
               if (
                 verifyResponse.data.message === "Payment verified successfully"
               ) {
+                // setOrderId(response.payload.orderNo);
+                setShowConfirmationModal(true);
                 dispatch(clearCart(currentUser._id));
-                navigate("/order-success");
               } else {
                 setError("Payment verification failed");
               }
@@ -176,11 +181,35 @@ const CheckoutPage = () => {
       } else if (paymentMethod === "COD") {
         // Handle Cash on Delivery
         dispatch(clearCart(currentUser._id));
-        navigate("/order-success");
+        setOrderId(response.payload.orderNo);
+        setShowConfirmationModal(true);
       }
     } catch (error) {
       console.error(error);
       setError("Error placing order");
+    }
+  };
+
+  const handleDownloadInvoice = async (orderId) => {
+    console.log(orderId);
+    try {
+      const response = await axios.get(`/api/order/${orderId}/invoice`, {
+        responseType: "blob",
+      });
+
+      console.log("res ", response);
+
+      // Create a URL for the PDF blob and open/download it
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `invoice_${orderId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading the invoice", error);
     }
   };
 
@@ -475,6 +504,57 @@ const CheckoutPage = () => {
           Place Order
         </button>
       </div>
+      <Modal
+        show={showConfirmationModal}
+        onClose={() => setShowConfirmationModal(false)}
+        popup
+        size="md"
+      >
+        <Modal.Header />
+        <Modal.Body>
+          <div className="text-center">
+            <h3 className="text-lg font-normal text-gray-500 dark:text-gray-400">
+              Thank You for Your Order!
+            </h3>
+            <p className="mt-2">
+              Your order ID is: <strong>{orderId}</strong>
+            </p>
+            <div className="flex justify-center gap-4 mt-4">
+              <Button
+                color="success"
+                onClick={() => {
+                  setShowConfirmationModal(false);
+                  navigate("/");
+                }}
+                className="w-full"
+              >
+                Continue Shopping
+              </Button>
+              <Button
+                color="gray"
+                onClick={() => {
+                  setShowConfirmationModal(false);
+                  navigate(`/order/${orderId}`); // Navigate to order details
+                }}
+                className="w-full"
+              >
+                Order Details
+              </Button>
+              <Button
+                color="gray"
+                onClick={() => {
+                  // Logic to download invoice
+                  // This could be a function that triggers the download
+                  handleDownloadInvoice(orderId);
+                }}
+                className="w-full"
+              >
+                Download Invoice
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
       <Modal
         show={showEditModal}
         onClose={() => setShowEditModal(false)}

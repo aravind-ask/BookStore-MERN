@@ -5,6 +5,7 @@ import { Badge, Card, Button, Spinner, Alert } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import { fetchOrderDetails } from "../redux/order/orderSlice"; // Assuming you have a slice to fetch order details
 import { toast, ToastContainer } from "react-toastify";
+import axios from "axios";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -28,8 +29,27 @@ const OrderDetails = () => {
       }
     }
     loadOrderDetails();
-    console.log(orderDetails)
+    console.log(orderDetails);
   }, [dispatch, orderId]);
+
+  const handleDownloadInvoice = async (orderId) => {
+    try {
+      const response = await axios.get(`/api/order/${orderId}/invoice`, {
+        responseType: "blob",
+      });
+
+      // Create a URL for the PDF blob and open/download it
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `invoice_${orderId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error downloading the invoice", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -72,6 +92,17 @@ const OrderDetails = () => {
         <p className="text-sm text-gray-500">
           Placed on: {new Date(orderDetails?.createdAt).toLocaleDateString()}
         </p>
+        <Button
+          color="gray"
+          onClick={() => {
+            // Logic to download invoice
+            // This could be a function that triggers the download
+            handleDownloadInvoice(orderId);
+          }}
+          className="w-full"
+        >
+          Download Invoice
+        </Button>
       </Card>
 
       <div className="space-y-6">

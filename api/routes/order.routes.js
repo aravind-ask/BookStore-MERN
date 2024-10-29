@@ -3,6 +3,7 @@ import { verifyToken } from "../utils/verifyUser.js";
 import {
   applyCoupon,
   cancelOrder,
+  generateInvoice,
   getOrderDetails,
   getOrders,
   placeOrder,
@@ -21,5 +22,7 @@ router.patch("/update/:orderId/:itemId", verifyToken, updateOrderItemStatus);
 router.post("/cancel/:orderId/:itemId", verifyToken, cancelOrder);
 router.post("/return", verifyToken, returnOrder)
 router.post("/apply-coupon", verifyToken, applyCoupon)
+router.get("/:orderNumber/invoice", generateInvoice);
+
 
 export default router;

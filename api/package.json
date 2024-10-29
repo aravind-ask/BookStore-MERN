@@ -27,6 +27,7 @@
     "nodemailer": "^6.9.15",
     "otp-generator": "^4.0.1",
     "paypal-rest-sdk": "^1.8.1",
+    "pdf-lib": "^1.17.1",
     "razorpay": "^2.9.4",
     "socket.io": "^4.8.0"
   },
