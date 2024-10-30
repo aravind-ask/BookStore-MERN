@@ -24,6 +24,7 @@ import { createNewOrder } from "../redux/order/orderSlice";
 const CheckoutPage = () => {
   const location = useLocation();
   const cartItems = location.state?.cartItems;
+  console.log("cart: ", cartItems);
 
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -53,8 +54,6 @@ const CheckoutPage = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  console.log("prp", cartItems);
 
   const [availableCoupons, setAvailableCoupons] = useState([]);
 
@@ -258,11 +257,13 @@ const CheckoutPage = () => {
   useEffect(() => {
     if (cartItems && cartItems.items) {
       const subtotal = cartItems.items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
+        (sum, item) =>
+          sum + item.price * (item.quantity > 0 ? item.quantity : 1),
         0
       );
       const offerPrice = cartItems.items.reduce(
-        (sum, item) => sum + item.discountedPrice * item.quantity,
+        (sum, item) =>
+          sum + item.discountedPrice * (item.quantity > 0 ? item.quantity : 1),
         0
       );
       let finalAmount = offerPrice;

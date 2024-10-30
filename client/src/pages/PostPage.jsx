@@ -1,7 +1,7 @@
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Button, Spinner } from "flowbite-react";
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import CommentSection from "../components/CommentSection";
 import BookCard from "../components/BookCard";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,7 +25,7 @@ export default function PostPage() {
   const [error, setError] = useState(null);
   const dispatch = useDispatch();
   const [relatedBooks, setRelatedBooks] = useState([]);
-
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
 
@@ -151,6 +151,31 @@ export default function PostPage() {
         toast.success("Book added to cart");
       }
     });
+  };
+
+  const handleCheckout = () => {
+    // if (cartItems.items.length === 0) {
+    //   setMessage("Your cart is empty. Please add items before checking out.");
+    //   setError(true);
+    //   return;
+    // }
+    let cartItems = {
+      items: [
+        {
+          author: book.author,
+          bookId: book._id,
+          discountedPrice: book.discountedPrice,
+          images: book.images[0],
+          price: book.price,
+          quantity: 1,
+          slug: book.slug,
+          title: book.title,
+          stock: book.stock,
+        },
+      ],
+    };
+
+    navigate("/book/checkout", { state: { cartItems } });
   };
 
   const handleWishlist = async () => {
@@ -305,6 +330,7 @@ export default function PostPage() {
 
           <div className="flex space-x-4">
             <Button
+              onClick={handleCheckout}
               className="bg-red-500 text-white px-6 py-2 rounded-lg"
               disabled={book.stock === 0}
             >
