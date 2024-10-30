@@ -10,6 +10,7 @@ import {
   returnOrder,
   updateOrderItemStatus,
   verifyPayment,
+  getPaymentDetails,
 } from "../controllers/order.controller.js";
 
 const router = express.Router();
@@ -20,9 +21,13 @@ router.get("/", verifyToken, getOrders);
 router.get("/:orderId", verifyToken, getOrderDetails);
 router.patch("/update/:orderId/:itemId", verifyToken, updateOrderItemStatus);
 router.post("/cancel/:orderId/:itemId", verifyToken, cancelOrder);
-router.post("/return", verifyToken, returnOrder)
-router.post("/apply-coupon", verifyToken, applyCoupon)
+router.post("/return", verifyToken, returnOrder);
+router.post("/apply-coupon", verifyToken, applyCoupon);
 router.get("/:orderNumber/invoice", generateInvoice);
-
+router.get(
+  "/:orderId/razorpay-payment-details",
+  verifyToken,
+  getPaymentDetails
+);
 
 export default router;

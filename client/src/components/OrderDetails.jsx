@@ -11,6 +11,7 @@ const OrderDetails = () => {
   const { orderId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { currentUser } = useSelector((state) => state.user);
 
   const { orderDetails, isLoading, error } = useSelector(
     (state) => state.order
@@ -51,6 +52,58 @@ const OrderDetails = () => {
     }
   };
 
+  const handleCompletePayment = async () => {
+    try {
+      const response = await axios.get(
+        `/api/order/${orderId}/razorpay-payment-details`
+      );
+      const { order, key } = response.data;
+
+      const options = {
+        key,
+        amount: order.amount,
+        currency: "INR",
+        name: "Book Store",
+        description: `Order #${order.receipt}`,
+        order_id: order.id,
+        handler: async function (response) {
+          try {
+            const verifyResponse = await axios.post(
+              "/api/order/verify-payment",
+              {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                items: orderDetails.cartItems,
+              }
+            );
+
+            toast.success("Payment completed successfully!");
+            // navigate(`/order/${orderId}`);
+            await dispatch(fetchOrderDetails(orderId));
+          } catch (error) {
+            toast.error("Payment verification failed.");
+            console.error("Error verifying payment:", error);
+          }
+        },
+        prefill: {
+          name: currentUser.name,
+          email: currentUser.email,
+          contact: orderDetails.addressId.phone,
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.open();
+    } catch (error) {
+      toast.error("Error initiating Razorpay payment.");
+      console.error("Error:", error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -88,6 +141,16 @@ const OrderDetails = () => {
           >
             {orderDetails?.paymentStatus}
           </Badge>
+          {orderDetails?.paymentMethod === "Razorpay" &&
+            orderDetails?.paymentStatus === "pending" && (
+              <Button
+                color="success"
+                onClick={handleCompletePayment}
+                className="mb-6"
+              >
+                Complete Payment
+              </Button>
+            )}
         </div>
         <p className="text-sm text-gray-500">
           Placed on: {new Date(orderDetails?.createdAt).toLocaleDateString()}

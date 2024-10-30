@@ -187,6 +187,8 @@ export const verifyPayment = async (req, res, next) => {
       items,
     } = req.body;
 
+    console.log(req.body)
+
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSign = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -211,6 +213,35 @@ export const verifyPayment = async (req, res, next) => {
     } else {
       return res.status(400).json({ message: "Invalid signature sent!" });
     }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
+export const getPaymentDetails = async (req, res, next) => {
+  try {
+    const orderId = req.params.orderId;
+    const order = await Order.findById(orderId);
+    if (!order || order.paymentMethod !== "Razorpay") {
+      return res
+        .status(404)
+        .json({ message: "Order not found or invalid payment method" });
+    }
+
+    const options = {
+      amount: Math.round(order.orderSummary.total * 100), // Convert to paise
+      currency: "INR",
+      receipt: order.orderNumber,
+      payment_capture: 1,
+    };
+    const razorpayOrder = await razorpay.orders.create(options);
+
+    // Update the order with the new razorpayOrderId
+    order.razorpayOrderId = razorpayOrder.id; // Update the order with the new Razorpay order ID
+    await order.save(); // Save the updated order
+
+    res.json({ order: razorpayOrder, key: process.env.RAZORPAY_KEY_ID });
   } catch (error) {
     console.log(error);
     next(error);
