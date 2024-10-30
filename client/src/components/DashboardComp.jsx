@@ -8,6 +8,7 @@ import {
 } from 'react-icons/hi';
 import { Button, Table } from 'flowbite-react';
 import { Link } from 'react-router-dom';
+import SalesReportChart from './SalesReportChart';
 
 export default function DashboardComp() {
   const [users, setUsers] = useState([]);
@@ -119,6 +120,7 @@ export default function DashboardComp() {
           </div>
         </div>
       </div>
+      <div><SalesReportChart/></div>
       <div className="flex flex-wrap gap-4 py-3 mx-auto justify-center">
         <div className="flex flex-col w-full md:w-auto shadow-md p-2 rounded-md dark:bg-gray-800">
           <div className="flex justify-between  p-3 text-sm font-semibold">

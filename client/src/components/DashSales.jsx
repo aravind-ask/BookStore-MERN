@@ -12,6 +12,7 @@ import axios from "axios";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import * as XLSX from "xlsx";
+import SalesReportChart from "./SalesReportChart";
 
 export default function DashSales() {
   const [reportData, setReportData] = useState(null);
@@ -109,6 +110,8 @@ export default function DashSales() {
   return (
     <div className="max-w-7xl mx-auto p-4">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Sales Report</h1>
+
+      <div><SalesReportChart/></div>
 
       {/* Filters */}
       <div className="flex flex-wrap justify-between items-center mb-6">

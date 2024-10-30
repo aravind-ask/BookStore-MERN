@@ -155,17 +155,19 @@ const OrderDetails = () => {
         <p className="text-sm text-gray-500">
           Placed on: {new Date(orderDetails?.createdAt).toLocaleDateString()}
         </p>
-        <Button
-          color="gray"
-          onClick={() => {
-            // Logic to download invoice
-            // This could be a function that triggers the download
-            handleDownloadInvoice(orderId);
-          }}
-          className="w-full"
-        >
-          Download Invoice
-        </Button>
+        {orderDetails?.paymentStatus === "success" && (
+          <Button
+            color="gray"
+            onClick={() => {
+              // Logic to download invoice
+              // This could be a function that triggers the download
+              handleDownloadInvoice(orderId);
+            }}
+            className="w-full"
+          >
+            Download Invoice
+          </Button>
+        )}
       </Card>
 
       <div className="space-y-6">

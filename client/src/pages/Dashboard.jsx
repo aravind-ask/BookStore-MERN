@@ -13,6 +13,7 @@ import DashWallet from "../components/DashWallet";
 import DashCoupon from "../components/DashCoupons";
 import DashOffers from "../components/DashOffers";
 import DashSales from "../components/DashSales";
+import SalesReportChart from "../components/SalesReportChart";
 
 export default function Dashboard() {
   const location = useLocation();
