@@ -4,9 +4,9 @@ import { errorHandler } from "../utils/error.js";
 // Create Coupon
 export const createCoupon = async (req, res, next) => {
   try {
-    const { code, discount, maxUsage, expiryDate } = req.body;
+    const { code, discount, maxUsage, expiryDate, minPurchaseAmt } = req.body;
 
-    if (!code || !discount || !maxUsage || !expiryDate) {
+    if (!code || !discount || !maxUsage || !expiryDate || !minPurchaseAmt) {
       return next(errorHandler(400, "All fields are required"));
     }
 
@@ -21,6 +21,7 @@ export const createCoupon = async (req, res, next) => {
       maxUsage,
       expiryDate,
       isActive: true,
+      minPurchaseAmt,
     });
 
     await coupon.save();
@@ -34,7 +35,8 @@ export const createCoupon = async (req, res, next) => {
 export const editCoupon = async (req, res, next) => {
   try {
     const { couponId } = req.params;
-    const { code, discount, maxUsage, expiryDate, isActive } = req.body;
+    const { code, discount, maxUsage, expiryDate, isActive, minPurchaseAmt } =
+      req.body;
 
     const coupon = await Coupon.findById(couponId);
     if (!coupon) {
@@ -50,7 +52,7 @@ export const editCoupon = async (req, res, next) => {
 
     const updatedCoupon = await Coupon.findByIdAndUpdate(
       couponId,
-      { code, discount, maxUsage, expiryDate, isActive },
+      { code, discount, maxUsage, expiryDate, isActive, minPurchaseAmt },
       { new: true, runValidators: true }
     );
 
@@ -63,23 +65,22 @@ export const editCoupon = async (req, res, next) => {
   }
 };
 
-export const updateCouponStatus = async (req,res,next)=>{
-    try {
-        const couponId = req.params.couponId;
-        const { isActive } = req.body;
-        const coupon = await Coupon.findById(couponId);
-        if (!coupon) {
-          return next(errorHandler(404, "Coupon not found"));
-        }
-        coupon.isActive = isActive;
-        await coupon.save();
-        res.status(200).json({ message: "Coupon status updated successfully" });
-    } catch (error) {
-        console.log(error)
-        next(error)
+export const updateCouponStatus = async (req, res, next) => {
+  try {
+    const couponId = req.params.couponId;
+    const { isActive } = req.body;
+    const coupon = await Coupon.findById(couponId);
+    if (!coupon) {
+      return next(errorHandler(404, "Coupon not found"));
     }
-    
-}
+    coupon.isActive = isActive;
+    await coupon.save();
+    res.status(200).json({ message: "Coupon status updated successfully" });
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
 
 // Delete Coupon
 export const deleteCoupon = async (req, res, next) => {
@@ -106,5 +107,3 @@ export const getAllCoupons = async (req, res, next) => {
     next(error);
   }
 };
-
-

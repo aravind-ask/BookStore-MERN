@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faShoppingCart } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -90,12 +90,12 @@ const CartPage = () => {
           <p className="text-lg text-gray-600 mb-4">
             It looks like you haven't added any books to your cart yet!
           </p>
-          <button
+          <Link
             className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => console.log("Redirect to book store")}
+            to={'/books'}
           >
             Explore Our Bookstore
-          </button>
+          </Link>
           <div className="mt-4">
             <FontAwesomeIcon icon={faShoppingCart} size="4x" />
           </div>

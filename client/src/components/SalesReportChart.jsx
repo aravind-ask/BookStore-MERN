@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Bar, Line } from "react-chartjs-2";
 import axios from "axios";
 import DatePicker from "react-datepicker"; // Import from react-datepicker

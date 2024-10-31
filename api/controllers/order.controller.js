@@ -187,7 +187,7 @@ export const verifyPayment = async (req, res, next) => {
       items,
     } = req.body;
 
-    console.log(req.body)
+    console.log(req.body);
 
     const sign = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSign = crypto
@@ -474,7 +474,7 @@ export const applyCoupon = async (req, res, next) => {
       return next(errorHandler(404, "Coupon has expired"));
     }
 
-    if (coupon.usageCount >= coupon.maxUsages) {
+    if (coupon.usageCount >= coupon.maxUsage) {
       return next(errorHandler(404, "Coupon usage limit reached"));
     }
 

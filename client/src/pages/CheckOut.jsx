@@ -293,7 +293,7 @@ const CheckoutPage = () => {
         setCouponError("");
       } else {
         setDiscountAmount(0);
-        setCouponError("Invalid or expired coupon.");
+        setCouponError(response.error.message);
       }
     } catch (error) {
       console.error("Error applying coupon:", error);

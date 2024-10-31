@@ -19,6 +19,10 @@ const couponSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    minPurchaseAmt: {
+      type: Number,
+      default: 0,
+    },
     isActive: {
       type: Boolean,
       default: true,

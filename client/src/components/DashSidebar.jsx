@@ -2,17 +2,13 @@ import { Sidebar } from "flowbite-react";
 import {
   HiUser,
   HiArrowSmRight,
-  HiDocumentText,
   HiOutlineUserGroup,
-  HiAnnotation,
   HiChartPie,
-  HiCash,
 } from "react-icons/hi";
 import {
   FaHome,
   FaBook,
   FaShoppingCart,
-  FaUser,
   FaWallet,
   FaListAlt,
   FaPercent, 

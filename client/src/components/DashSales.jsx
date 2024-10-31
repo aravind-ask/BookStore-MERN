@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button, Select, Table, Spinner, Card } from "flowbite-react";
+import { Button, Table, Spinner, Card } from "flowbite-react";
 import {
   FaChartLine,
   FaMoneyBillWave,

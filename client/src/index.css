@@ -7,10 +7,12 @@
 .tooltip {
   transition: opacity 0.3s ease;
   visibility: hidden;
+  cursor: pointer;
 }
 
 .tooltip-visible {
   visibility: visible;
+  cursor: pointer;
 }
 
 .disabled-shade{

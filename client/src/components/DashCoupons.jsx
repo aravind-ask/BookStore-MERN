@@ -18,6 +18,7 @@ export default function CouponManager() {
     expiryDate: "",
     isActive: true,
     maxUsage: 0,
+    minPurchaseAmt: 0,
   });
   const [message, setMessage] = useState(null);
   const [isError, setIsError] = useState(false);
@@ -47,6 +48,14 @@ export default function CouponManager() {
   // Handle create or update coupon
   const handleCreateOrUpdateCoupon = async (e) => {
     e.preventDefault();
+
+    // Validate discount percentage
+    if (parseFloat(newCoupon.discount) > 100) {
+      setMessage("Discount cannot exceed 100%");
+      setIsError(true);
+      return;
+    }
+
     const url = editingCouponId
       ? `/api/coupon/edit/${editingCouponId}`
       : "/api/coupon";
@@ -255,16 +264,29 @@ export default function CouponManager() {
                 />
               </div>
             </div>
-            <div className="w-1/2">
-              <Label htmlFor="expiryDate">Expiry Date</Label>
-              <TextInput
-                id="expiryDate"
-                name="expiryDate"
-                type="date"
-                value={newCoupon.expiryDate}
-                onChange={handleChange}
-                required
-              />
+            <div className="flex gap-4">
+              <div className="w-1/2">
+                <Label htmlFor="expiryDate">Expiry Date</Label>
+                <TextInput
+                  id="expiryDate"
+                  name="expiryDate"
+                  type="date"
+                  value={newCoupon.expiryDate}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="w-1/2">
+                <Label htmlFor="expiryDate">Minimum Purchase Amount</Label>
+                <TextInput
+                  id="minPurchaseAmt"
+                  name="minPurchaseAmt"
+                  type="number"
+                  value={newCoupon.minPurchaseAmt}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
             </div>
             <Button type="submit" gradientDuoTone="purpleToBlue">
               {editingCouponId ? "Update Coupon" : "Create Coupon"}
