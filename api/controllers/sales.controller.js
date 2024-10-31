@@ -66,3 +66,69 @@ export const getSalesReport = async (req, res, next) => {
   }
 };
 
+// Get Best Selling Books and Categories
+export const getBestSellers = async (req, res, next) => {
+  try {
+    // Best-selling books
+    const bestSellingBooks = await Order.aggregate([
+      { $unwind: "$cartItems" },
+      {
+        $group: {
+          _id: "$cartItems.bookId",
+          title: { $first: "$cartItems.book" },
+          totalSales: { $sum: "$cartItems.quantity" }
+        },
+      },
+      { $sort: { totalSales: -1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: "books",
+          localField: "_id",
+          foreignField: "_id",
+          as: "bookDetails"
+        }
+      },
+      { $unwind: "$bookDetails" }
+    ]);
+
+    // Best-selling categories
+    const bestSellingCategories = await Order.aggregate([
+      { $unwind: "$cartItems" },
+      {
+        $lookup: {
+          from: "books",
+          localField: "cartItems.bookId",
+          foreignField: "_id",
+          as: "bookDetails",
+        },
+      },
+      { $unwind: "$bookDetails" },
+      {
+        $lookup: {
+          from: "categories", // Assuming your categories collection is named "categories"
+          localField: "bookDetails.category", // This should reference the category ID
+          foreignField: "_id",
+          as: "categoryDetails",
+        },
+      },
+      { $unwind: "$categoryDetails" },
+      {
+        $group: {
+          _id: "$categoryDetails._id", // Group by category ID
+          categoryName: { $first: "$categoryDetails.name" }, // Extract the actual category name
+          totalSales: { $sum: "$cartItems.quantity" },
+        },
+      },
+      { $sort: { totalSales: -1 } },
+      { $limit: 10 },
+    ]);
+
+    res.status(200).json({
+      bestSellingBooks,
+      bestSellingCategories,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -13,7 +13,8 @@ import {
   FaListAlt,
   FaPercent, 
   FaTicketAlt,
-  FaChartLine, 
+  FaChartLine,
+  FaStar, 
 } from "react-icons/fa";
 
 import { useEffect, useState } from "react";
@@ -162,6 +163,15 @@ export default function DashSidebar() {
                   as="div"
                 >
                   Sales
+                </Sidebar.Item>
+              </Link>
+              <Link to="/dashboard?tab=bestSellers">
+                <Sidebar.Item
+                  active={tab === "bestSellers"}
+                  icon={FaStar}
+                  as="div"
+                >
+                  Best Sellers
                 </Sidebar.Item>
               </Link>
             </>
