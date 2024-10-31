@@ -51,6 +51,8 @@ const CheckoutPage = () => {
   const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [orderId, setOrderId] = useState(null);
+  // const [paymentSuccessful, setPaymentSuccessful] = useState(false);
+
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -139,6 +141,7 @@ const CheckoutPage = () => {
           image: "https://example.com/logo.png",
           order_id: response.payload.order.id,
           handler: async function (response) {
+            // setPaymentSuccessful(true);
             try {
               const verifyResponse = await axios.post(
                 "/api/order/verify-payment",
@@ -177,6 +180,15 @@ const CheckoutPage = () => {
 
         const rzp1 = new window.Razorpay(options);
         rzp1.open();
+
+        // setTimeout(() => {
+        //   if (!paymentSuccessful) {
+        //     setError("Payment failed.");
+        //     dispatch(clearCart(currentUser._id));
+        //     navigate("/dashboard?tab=orders"); // Redirect to order list
+        //   }
+        // }, 6000);
+
       } else if (paymentMethod === "COD") {
         // Handle Cash on Delivery
         dispatch(clearCart(currentUser._id));

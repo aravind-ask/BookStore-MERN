@@ -17,7 +17,7 @@ export const addBook = async (req, res, next) => {
     category,
     price,
     description,
-    images, // assuming images is an array of image URLs or objects
+    images,
     stock,
     condition,
   } = req.body;
@@ -50,8 +50,8 @@ export const addBook = async (req, res, next) => {
     stock,
     Condition: condition,
     description,
-    images: [...images], // spread the images array into the Book model
-    seller: req.user.id, // insert the current user's ID into the seller field
+    images: [...images],
+    seller: req.user.id,
     slug,
   });
 

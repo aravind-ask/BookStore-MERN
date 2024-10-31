@@ -4,6 +4,17 @@
 @tailwind utilities;
 
 
+/* Hide scrollbar on scrollable row */
+.scrollable-row {
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollable-row::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, and Opera */
+}
+
+
 .tooltip {
   transition: opacity 0.3s ease;
   visibility: hidden;

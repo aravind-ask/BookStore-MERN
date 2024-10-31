@@ -83,7 +83,7 @@ export default function Home() {
                       {category.name}
                     </h2>
                     <Link
-                      to={`/books/category/${category._id}`}
+                      to={`/books?searchTerm=&sort=desc&category=${category._id}&showOutOfStock=true`}
                       className="text-teal-500 hover:underline"
                     >
                       View all in {category.name}

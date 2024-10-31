@@ -103,7 +103,7 @@ export default function CreatePost() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...formData, images: imagesArray }),
+        body: JSON.stringify({ ...formData, images: imagesArray, category: formData.category }),
       });
       const data = await res.json();
       if (!res.ok) {
