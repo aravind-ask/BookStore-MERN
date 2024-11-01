@@ -108,6 +108,20 @@ export default function DashOffers() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const offerExists = offers.some(
+      (offer) => offer.title.toLowerCase() === formData.title.toLowerCase()
+    );
+
+    if (offerExists) {
+      toast.error("Offer with the same title already exists");
+      return;
+    }
+
+    if (parseFloat(formData.discountPercentage) > 100) {
+      toast.error("Discount cannot exceed 100%");
+      return;
+    }
+
     try {
       if (isEditing) {
         await axios.patch(`/api/offer/${editOfferId}`, formData);

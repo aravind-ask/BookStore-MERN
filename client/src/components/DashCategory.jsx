@@ -63,7 +63,6 @@ export default function DashCategory() {
       const data = await response.json();
       console.log(data);
 
-
       // Ensure the returned data has the expected structure
       if (data.data && data.data.name && data.data.description) {
         // Update the categories state with the new category
@@ -82,6 +81,16 @@ export default function DashCategory() {
 
   const handleEditCategory = async (e) => {
     e.preventDefault();
+
+    const categoryExists = categories.some(
+      (category) => category.name.toLowerCase() === newCategory.toLowerCase()
+    );
+
+    if (categoryExists) {
+      setAddError("Category already exists");
+      return;
+    }
+
     try {
       const url = `/api/category/edit-category/${editCategory._id}`;
       const payload = {

@@ -49,6 +49,16 @@ export default function CouponManager() {
   const handleCreateOrUpdateCoupon = async (e) => {
     e.preventDefault();
 
+    const couponExists = coupons.some(
+      (coupon) => coupon.code.toLowerCase() === newCoupon.code.toLowerCase()
+    );
+
+    if (couponExists) {
+      setMessage("Coupon with this code already exists");
+      setIsError(true);
+      return;
+    }
+
     // Validate discount percentage
     if (parseFloat(newCoupon.discount) > 100) {
       setMessage("Discount cannot exceed 100%");
