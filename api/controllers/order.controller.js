@@ -317,18 +317,18 @@ export const generateInvoice = async (req, res, next) => {
   try {
     const { orderNumber } = req.params;
 
-    // Fetch order details from the database
+   
     const order = await Order.findById(orderNumber)
       .populate("userId")
       .populate("addressId");
     if (!order) return res.status(404).json({ message: "Order not found" });
     console.log(order);
 
-    // Create a new PDF document
+    // Creating a new PDF document
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([600, 800]);
 
-    // Set basic document styling
+    // basic document styling
     page.drawText(`Invoice #${order.orderNumber}`, {
       x: 50,
       y: 750,

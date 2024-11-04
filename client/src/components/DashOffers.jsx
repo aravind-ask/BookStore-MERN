@@ -175,7 +175,7 @@ export default function DashOffers() {
       </div>
       <div className="flex justify-between mb-4">
         <p>Total Offers: {totalPages * 10}</p>
-        <p>Average Discount: {stats.avgDiscount}%</p>
+        <p>Average Discount: {stats.avgDiscount.toFixed(2)}%</p>
         <p>Maximum Discount: {stats.maxDiscount}%</p>
         <p>Active Offers: {stats.activeOffers}</p>
       </div>
