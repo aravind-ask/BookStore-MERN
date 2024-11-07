@@ -212,6 +212,15 @@ export default function Search() {
           >
             Clear All
           </button>
+          {!loading && books && totalPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={onPageChange}
+              />
+            </div>
+          )}
         </div>
       </div>
       <div className="w-full">
@@ -231,15 +240,6 @@ export default function Search() {
             </div>
           )}
         </div>
-        {!loading && books && totalPages > 1 && (
-          <div className="flex justify-center mt-4">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={onPageChange}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Button, Modal, Card, Badge, Select, Toast } from "flowbite-react";
+import { Button, Modal, Card, Badge, Select, Toast, Pagination } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import {
   cancelOrderItem,
@@ -22,6 +22,8 @@ const OrderList = () => {
   const [returnReason, setReturnReason] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 5;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -99,8 +101,24 @@ const OrderList = () => {
     return order.orderSummary.status === filterStatus; // Show orders that match the selected status
   });
 
+  // Pagination logic
+  const totalOrders = filteredOrders.length;
+  const totalPages = Math.ceil(totalOrders / ordersPerPage);
+
+  // Get current orders
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
+
   const handleOrderClick = (orderId) => {
     navigate(`/order/${orderId}`);
+  };
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo(0, 0); // Scroll to the top of the page
   };
 
   return (
@@ -142,7 +160,7 @@ const OrderList = () => {
         <div>Loading...</div>
       ) : (
         <div className="space-y-6">
-          {filteredOrders.map((order) => (
+          {currentOrders.map((order) => (
             <Card key={order._id} className="shadow-lg">
               {/* Order Header */}
               <div
@@ -155,6 +173,9 @@ const OrderList = () => {
                   </Badge>
                   <p className="text-gray-600 mt-2">
                     Total: ₹{order.orderSummary.total.toFixed(2)}
+                  </p>
+                  <p className="text-gray-500 mt-1">
+                    Ordered on: {new Date(order.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div>
@@ -266,6 +287,15 @@ const OrderList = () => {
               </div>
             </Card>
           ))}
+          {/* Pagination Controls */}
+          <div className="flex justify-center mt-4">
+            <Pagination
+              currentPage={currentPage}
+              onPageChange={handlePageChange}
+              showIcons={true}
+              totalPages={totalPages}
+            />
+          </div>
         </div>
       )}
 

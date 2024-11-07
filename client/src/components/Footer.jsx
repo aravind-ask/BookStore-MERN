@@ -27,48 +27,39 @@ export default function FooterCom() {
             <div>
               <Footer.Title title="Account" />
               <Footer.LinkGroup col>
-                <Footer.Link
-                  to="/dashboard"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  to="/dashboard?tab=profile"
+                  className="text-gray-600 hover:text-teal-500"
                 >
                   My Account
-                </Footer.Link>
-                <Footer.Link
-                  href="/about"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                </Link>
+                <Link
+                  to="/profile/cart"
+                  className="text-gray-600 hover:text-teal-500"
                 >
                   Cart
-                </Footer.Link>
-                <Footer.Link
-                  href="/about"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                </Link>
+                <Link
+                  to="/profile/wishlist"
+                  className="text-gray-600 hover:text-teal-500"
                 >
                   Wishlist
-                </Footer.Link>
+                </Link>
               </Footer.LinkGroup>
             </div>
             <div>
               <Footer.Title title="Quick Links" />
               <Footer.LinkGroup col>
-                <Footer.Link
-                  href=""
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  About Us{" "}
-                </Footer.Link>
-                <Footer.Link
-                  href="/about"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link to="/about" className="text-gray-600 hover:text-teal-500">
+                  About Us
+                </Link>
+                <Link
+                  to="/contact"
+                  className="text-gray-600 hover:text-teal-500"
                 >
                   Contact Us
-                </Footer.Link>
-
-                <Footer.Link href="#">FAQ</Footer.Link>
+                </Link>
+                {/* <Footer.Link href="#">FAQ</Footer.Link> */}
               </Footer.LinkGroup>
             </div>
             <div>

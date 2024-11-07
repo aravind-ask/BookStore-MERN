@@ -1,4 +1,4 @@
-import { Modal, Table, Button } from "flowbite-react";
+import { Modal, Table, Button, Pagination } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -13,14 +13,19 @@ export default function Dashbooks() {
   const [showModal, setShowModal] = useState(false);
   const [postIdToDelete, setPostIdToDelete] = useState("");
   const [bookToListUnlist, setBookToListUnlist] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalBooks, setTotalBooks] = useState(0);
+  const booksPerPage = 10;
 
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const res = await fetch(`/api/books/getbooks?isAdmin=true`);
+        const res = await fetch(`/api/books/getbooks?isAdmin=true&page=${currentPage}&limit=${booksPerPage}`);
         const data = await res.json();
+        console.log(data)
         if (res.ok) {
           setUserBooks(data.books);
+          setTotalBooks(data.totalBooks);
           if (data.books.length < 9) {
             setShowMore(false);
           }
@@ -32,7 +37,7 @@ export default function Dashbooks() {
     if (currentUser.isAdmin) {
       fetchBooks();
     }
-  }, [currentUser._id]);
+  }, [currentUser._id, currentPage]);
 
   const handleShowMore = async () => {
     const startIndex = userBooks.length;
@@ -77,6 +82,8 @@ export default function Dashbooks() {
       console.log(error.message);
     }
   };
+
+    const totalPages = Math.ceil(totalBooks / booksPerPage);
 
   return (
     <div className="table-auto overflow-x-scroll md:mx-auto p-3 scrollbar scrollbar-track-slate-100 scrollbar-thumb-slate-300 dark:scrollbar-track-slate-700 dark:scrollbar-thumb-slate-500">
@@ -179,14 +186,13 @@ export default function Dashbooks() {
               </Table.Body>
             ))}
           </Table>
-          {showMore && (
-            <button
-              onClick={handleShowMore}
-              className="w-full text-teal-500 self-center text-sm py-7"
-            >
-              Show more
-            </button>
-          )}
+          <Pagination
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            showIcons={true}
+            totalPages={totalPages}
+            className="mt-4"
+          />
         </>
       ) : (
         <p>You have no books yet!</p>
