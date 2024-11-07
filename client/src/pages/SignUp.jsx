@@ -11,6 +11,7 @@ import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../components/OAuth";
 import { useDispatch } from "react-redux";
 import { signInFailure, signInSuccess } from "../redux/user/userSlice";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
@@ -21,6 +22,7 @@ export default function SignUp() {
   const [otp, setOtp] = useState("");
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -149,13 +151,26 @@ export default function SignUp() {
               />
             </div>
             <div>
-              <Label value="Your password" />
-              <TextInput
-                type="password"
-                placeholder="Password"
-                id="password"
-                onChange={handleChange}
-              />
+              <Label value="Your password" htmlFor="password" />
+              <div className="relative">
+                <TextInput
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  id="password"
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-2 flex items-center rounded-full p-1 text-gray-500 hover:text-gray-600 transition-colors focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <AiFillEyeInvisible size={20} />
+                  ) : (
+                    <AiFillEye size={20} />
+                  )}
+                </button>
+              </div>
             </div>
             <Button
               gradientDuoTone="purpleToPink"

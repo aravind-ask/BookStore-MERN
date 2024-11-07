@@ -7,9 +7,11 @@ import {
   signInSuccess,
   signInFailure,
 } from "../redux/user/userSlice";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 
 export default function AdminSignIn() {
   const [formData, setFormData] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
   const { loading, error: errorMessage } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export default function AdminSignIn() {
         return dispatch(signInFailure("Please fill all the fields"));
       }
     }
-    console.log(demoData)
+    console.log(demoData);
     try {
       dispatch(signInStart());
       const res = await fetch("/api/auth/admin/signin", {
@@ -58,7 +60,6 @@ export default function AdminSignIn() {
     });
   };
 
-
   return (
     <div className="min-h-screen mt-20">
       <div className="flex p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
@@ -78,13 +79,26 @@ export default function AdminSignIn() {
               />
             </div>
             <div>
-              <Label value="Password" />
-              <TextInput
-                type="password"
-                placeholder="Password"
-                id="password"
-                onChange={handleChange}
-              />
+              <Label value="Your password" htmlFor="password" />
+              <div className="relative">
+                <TextInput
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  id="password"
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-2 flex items-center rounded-full p-1 text-gray-500 hover:text-gray-600 transition-colors focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <AiFillEyeInvisible size={20} />
+                  ) : (
+                    <AiFillEye size={20} />
+                  )}
+                </button>
+              </div>
             </div>
             <Button
               gradientDuoTone="purpleToPink"
