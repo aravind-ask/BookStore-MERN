@@ -7,7 +7,7 @@ import {
   cancelOrderItem,
   fetchOrderDetails,
   returnOrderItem,
-} from "../redux/order/orderSlice"; // Assuming you have a slice to fetch order details
+} from "../redux/order/orderSlice";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 
@@ -16,10 +16,10 @@ const OrderDetails = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
-
   const { orderDetails, isLoading, error } = useSelector(
     (state) => state.order
   );
+
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [cancelledOrderId, setCancelledOrderId] = useState("");
@@ -34,13 +34,13 @@ const OrderDetails = () => {
       try {
         await dispatch(fetchOrderDetails(orderId));
         setLoading(false);
+        console.log(orderDetails);
       } catch (err) {
         setErrorMessage("Failed to load order details.");
         setLoading(false);
       }
     }
     loadOrderDetails();
-    console.log(orderDetails);
   }, [dispatch, orderId]);
 
   const handleDownloadInvoice = async (orderId) => {
@@ -48,8 +48,6 @@ const OrderDetails = () => {
       const response = await axios.get(`/api/order/${orderId}/invoice`, {
         responseType: "blob",
       });
-
-      // Create a URL for the PDF blob and open/download it
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -87,9 +85,7 @@ const OrderDetails = () => {
                 items: orderDetails.cartItems,
               }
             );
-
             toast.success("Payment completed successfully!");
-            // navigate(`/order/${orderId}`);
             await dispatch(fetchOrderDetails(orderId));
           } catch (error) {
             toast.error("Payment verification failed.");
@@ -101,9 +97,7 @@ const OrderDetails = () => {
           email: currentUser.email,
           contact: orderDetails.addressId.phone,
         },
-        theme: {
-          color: "#3399cc",
-        },
+        theme: { color: "#3399cc" },
       };
 
       const rzp1 = new window.Razorpay(options);
@@ -130,6 +124,8 @@ const OrderDetails = () => {
         })
       );
       setShowModal(false);
+      await dispatch(fetchOrderDetails(orderId));
+      toast.success("Order item cancelled successfully!");
     } catch (error) {
       console.error(error);
     }
@@ -143,22 +139,18 @@ const OrderDetails = () => {
 
   const handleConfirmReturn = async () => {
     try {
-      const response = await dispatch(
+      await dispatch(
         returnOrderItem({
           orderId: cancelledOrderId,
           itemId: cancelledItemId,
           returnReason,
         })
       );
-      console.log(response);
-      setShowReturnModal(false); // Show a success message or toast
-      // Toast.success(
-      //   `Refund of ₹${response.payload.refundAmount} processed successfully`
-      // );
+      toast.success("Order item returned successfully!");
+      await dispatch(fetchOrderDetails(orderId));
+      setShowReturnModal(false);
     } catch (error) {
       console.error(error);
-      // Show an error message or toast
-      // Toast.error("Failed to process return");
     }
   };
 
@@ -181,11 +173,11 @@ const OrderDetails = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
       <ToastContainer />
-      <Card className="mb-8 shadow-lg">
+      <Card className="mb-8 p-6 rounded-xl shadow-lg bg-gradient-to-r from-gray-50 to-gray-100">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-2xl font-bold text-gray-800">
             Order #{orderDetails?.orderNumber}
           </h2>
           <Badge
@@ -200,7 +192,8 @@ const OrderDetails = () => {
             {orderDetails?.paymentStatus}
           </Badge>
           {orderDetails?.paymentMethod === "Razorpay" &&
-            orderDetails?.paymentStatus === "pending" && (
+           ( orderDetails?.paymentStatus === "pending" ||
+            orderDetails?.paymentStatus === "failed") && (
               <Button
                 color="success"
                 onClick={handleCompletePayment}
@@ -216,70 +209,95 @@ const OrderDetails = () => {
         {orderDetails?.paymentStatus === "success" && (
           <Button
             color="gray"
-            onClick={() => {
-              // Logic to download invoice
-              // This could be a function that triggers the download
-              handleDownloadInvoice(orderId);
-            }}
-            className="w-full"
+            onClick={() => handleDownloadInvoice(orderId)}
+            className="mt-4 w-full"
           >
             Download Invoice
           </Button>
         )}
+        <Button color="gray" onClick={() => navigate("/dashboard?tab=orders")}>
+          Back to Orders
+        </Button>
       </Card>
 
       <div className="space-y-6">
-        {/* Items Ordered */}
-        <Card className="p-6 shadow-md">
-          <h3 className="text-xl font-semibold mb-4">Items Ordered</h3>
+        <Card className="p-6 rounded-xl shadow-md bg-white">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Items Ordered
+          </h3>
           <div className="space-y-4">
             {orderDetails?.cartItems?.map((item) => (
               <Card
                 key={item._id}
-                className="flex md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0"
+                className="flex flex-row md:flex-row items-center gap-4 p-4 rounded-lg shadow-md bg-gray-50"
               >
-                <div className="flex items-start space-x-4">
+                <div className="flex items-center justify-evenly md:items-start gap-4">
+                  {/* Image Section */}
                   <img
                     src={item.images[0]}
                     alt={item.title}
-                    className="w-24 h-24 object-cover rounded-lg"
+                    className="w-20 h-20 object-cover rounded-md shadow-sm"
                   />
-                  <div>
-                    <h4 className="text-lg font-bold">{item.book}</h4>
-                    <p className="text-sm text-gray-500">
-                      Author: {item.author}
-                    </p>
+
+                  {/* Book Details and Status */}
+                  <div className="flex-grow flex flex-col space-y-1">
+                    <h4 className="text-lg font-semibold text-gray-700">
+                      {item.book}
+                    </h4>
+                    {/* <p className="text-sm text-gray-500">Author: {item.author}</p> */}
                     <p className="text-sm text-gray-500">
                       Quantity: {item.quantity}
                     </p>
+                    <Badge
+                      color={
+                        item.status === "delivered"
+                          ? "success"
+                          : item.status === "pending"
+                          ? "warning"
+                          : "failure"
+                      }
+                    >
+                      {item.status.charAt(0).toUpperCase() +
+                        item.status.slice(1)}
+                    </Badge>
                   </div>
-                </div>
-                <div className="flex justify-between items-center w-full">
-                  <p className="text-lg font-bold">₹{item.price.toFixed(2)}</p>
-                  <p className="text-lg font-bold">
-                    ₹{(item.price * item.quantity).toFixed(2)}
-                  </p>
-                </div>
-                <div className="flex space-x-2 mt-2">
-                  {orderDetails?.orderSummary?.status !== "cancelled" && (
-                    <Button
-                      color="failure"
-                      onClick={() => {
-                        handleCancel(orderDetails?._id, item._id);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                  {orderDetails?.orderSummary?.status === "delivered" && (
-                    <Button
-                      color="warning"
-                      onClick={() => {
-                        handleReturn(orderDetails?._id, item._id);
-                      }}
-                    >
-                      Return
-                    </Button>
+
+                  {/* Price Details */}
+                  <div className="flex flex-col items-end text-right">
+                    <p className="text-lg font-bold text-gray-800">
+                      ₹{item.price.toFixed(2)}
+                    </p>
+                    <p className="text-lg font-bold text-gray-800">
+                      Total: ₹{(item.price * item.quantity).toFixed(2)}
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  {orderDetails.paymentStatus !== "failed" && (
+                    <div className="flex flex-col md:flex-row items-center gap-2 mt-2 md:mt-0">
+                      {item?.status !== "cancelled" && (
+                        <Button
+                          color="failure"
+                          onClick={() =>
+                            handleCancel(orderDetails?._id, item._id)
+                          }
+                          size="sm"
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                      {item?.status === "delivered" && (
+                        <Button
+                          color="warning"
+                          onClick={() =>
+                            handleReturn(orderDetails?._id, item._id)
+                          }
+                          size="sm"
+                        >
+                          Return
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               </Card>
@@ -287,112 +305,51 @@ const OrderDetails = () => {
           </div>
         </Card>
 
-        {/* Order Summary */}
-        <Card className="p-6 shadow-md">
-          <h3 className="text-xl font-semibold mb-4">Order Summary</h3>
+        <Card className="p-6 rounded-xl shadow-md bg-white">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Order Summary
+          </h3>
           <div className="space-y-2">
-            <div className="flex justify-between">
+            <div className="flex justify-between text-gray-600">
               <span>Subtotal</span>
-              <span>
-                ₹
-                {orderDetails?.orderSummary?.subtotal
-                  ? orderDetails.orderSummary.subtotal.toFixed(2)
-                  : "0.00"}
-              </span>
+              <span>₹{orderDetails?.orderSummary?.subtotal?.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-gray-600">
               <span>Tax (8%)</span>
-              <span>
-                ₹
-                {orderDetails?.orderSummary?.tax
-                  ? orderDetails.orderSummary.tax.toFixed(2)
-                  : "0.00"}
-              </span>
+              <span>₹{orderDetails?.orderSummary?.tax?.toFixed(2)}</span>
             </div>
             {orderDetails?.orderSummary?.discount > 0 && (
               <div className="flex justify-between text-green-500">
                 <span>Discount</span>
                 <span>
-                  - ₹
-                  {orderDetails?.orderSummary?.discount
-                    ? orderDetails.orderSummary.discount.toFixed(2)
-                    : "0.00"}
+                  - ₹{orderDetails?.orderSummary?.discount?.toFixed(2)}
                 </span>
               </div>
             )}
-            <div className="flex justify-between font-bold">
+            <div className="flex justify-between font-semibold text-gray-700">
               <span>Total</span>
-              <span>
-                ₹
-                {orderDetails?.orderSummary?.total
-                  ? orderDetails.orderSummary.total.toFixed(2)
-                  : "0.00"}
-              </span>
-            </div>
-            <div className="flex justify-between font-bold">
-              <span>Razorpay Payment ID</span>
-              <span>
-                {orderDetails?.paymentMethod === "Razorpay" && (
-                  <span>{orderDetails.razorpayOrderId}</span>
-                )}
-              </span>
-            </div>
-            <div className="flex justify-between font-bold">
-              <span>Payment Method</span>
-              <span>{orderDetails?.paymentMethod}</span>
-            </div>
-            <div className="flex justify-between font-bold">
-              <span>Payment Status</span>
-              <span>{orderDetails?.paymentStatus}</span>
+              <span>₹{orderDetails?.orderSummary?.total?.toFixed(2)}</span>
             </div>
           </div>
         </Card>
 
-        {/* Shipping Address */}
-        <Card className="p-6 shadow-md">
-          <h3 className="text-xl font-semibold mb-4">Shipping Address</h3>
-          <div className="space-y-2">
+        <Card className="p-6 rounded-xl shadow-md bg-white">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Shipping Address
+          </h3>
+          <div className="space-y-2 text-gray-600">
             <p>{orderDetails?.addressId?.name || "N/A"}</p>
             <p>
               {orderDetails?.addressId?.address || "N/A"},{" "}
-              {orderDetails?.addressId?.city || "N/A"}{" "}
+              {orderDetails?.addressId?.city || "N/A"},{" "}
               {orderDetails?.addressId?.state || "N/A"}{" "}
               {orderDetails?.addressId?.pinCode || "N/A"}
             </p>
             <p>Phone: {orderDetails?.addressId?.phone || "N/A"}</p>
           </div>
         </Card>
-
-        {/* Actions */}
-        <div className="flex justify-end space-x-4 mt-6">
-          {orderDetails?.orderSummary?.status !== "cancelled" && (
-            <Button
-              color="failure"
-              onClick={() =>
-                toast.error("Order cancellation is not implemented yet.")
-              }
-            >
-              Cancel Order
-            </Button>
-          )}
-          {orderDetails?.orderSummary?.status === "delivered" && (
-            <Button
-              color="warning"
-              onClick={() =>
-                toast.success("Return process is not implemented yet.")
-              }
-            >
-              Return Order
-            </Button>
-          )}
-          <Button
-            color="gray"
-            onClick={() => navigate("/dashboard?tab=orders")}
-          >
-            Back to Orders
-          </Button>
-        </div>
       </div>
+
       <Modal show={showModal} onClose={() => setShowModal(false)}>
         <Modal.Header>Cancel Order Item</Modal.Header>
         <Modal.Body>
@@ -414,6 +371,7 @@ const OrderDetails = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
       <Modal show={showReturnModal} onClose={() => setShowReturnModal(false)}>
         <Modal.Header>Return Order Item</Modal.Header>
         <Modal.Body>

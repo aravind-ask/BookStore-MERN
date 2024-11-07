@@ -92,9 +92,12 @@ const OrderList = () => {
   );
 
   // Filtering orders by status
-  const filteredOrders = sortedOrders.filter((order) =>
-    filterStatus === "All" ? true : order.orderSummary.status === filterStatus
-  );
+  const filteredOrders = sortedOrders.filter((order) => {
+    if (filterStatus === "All") {
+      return true; // Show all orders
+    }
+    return order.orderSummary.status === filterStatus; // Show orders that match the selected status
+  });
 
   const handleOrderClick = (orderId) => {
     navigate(`/order/${orderId}`);
@@ -113,9 +116,9 @@ const OrderList = () => {
           </div>
 
           {/* Filter Dropdown */}
-          <div>
+          {/* <div>
             <Select
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => setFilterStatus(e.target.value)} // Update filter status
               value={filterStatus}
               className="block w-full text-sm text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm"
             >
@@ -125,7 +128,7 @@ const OrderList = () => {
               <option value="pending">Pending</option>
               <option value="shipped">Shipped</option>
             </Select>
-          </div>
+          </div> */}
           {/* <div className="text-right">
             <p className="text-3xl font-bold text-blue-600">{orders.length}</p>
             <Badge color="success" className="mt-2">

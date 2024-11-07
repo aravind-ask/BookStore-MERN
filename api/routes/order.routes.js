@@ -11,12 +11,14 @@ import {
   updateOrderItemStatus,
   verifyPayment,
   getPaymentDetails,
+  markPaymentFailed,
 } from "../controllers/order.controller.js";
 
 const router = express.Router();
 
 router.post("/checkout", verifyToken, placeOrder);
 router.post("/verify-payment", verifyToken, verifyPayment);
+router.post("/mark-payment-failed", verifyToken, markPaymentFailed);
 router.get("/", verifyToken, getOrders);
 router.get("/:orderId", verifyToken, getOrderDetails);
 router.patch("/update/:orderId/:itemId", verifyToken, updateOrderItemStatus);

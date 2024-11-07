@@ -20,6 +20,7 @@ import { Button, Card, Modal } from "flowbite-react";
 import { AiOutlineEdit } from "react-icons/ai";
 import { clearCart } from "../redux/cart/cartSlice";
 import { createNewOrder } from "../redux/order/orderSlice";
+import { toast } from "react-toastify";
 
 const CheckoutPage = () => {
   const location = useLocation();
@@ -52,6 +53,8 @@ const CheckoutPage = () => {
   const [showTooltip, setShowTooltip] = useState(false); // State for tooltip visibility
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [orderId, setOrderId] = useState(null);
+  const [paymentFailed, setPaymentFailed] = useState(false);
+  const [paymentErrorMessage, setPaymentErrorMessage] = useState("");
   // const [paymentSuccessful, setPaymentSuccessful] = useState(false);
 
   const dispatch = useDispatch();
@@ -116,22 +119,23 @@ const CheckoutPage = () => {
 
     if (!selectedAddress) {
       setError("Please select a shipping address.");
-      return; // Exit the function if validation fails
+      return;
     }
 
     if (!paymentMethod) {
       setError("Please select a payment method.");
-      return; // Exit the function if validation fails
+      return;
     }
     setError("");
 
     try {
       const response = await dispatch(createNewOrder(orderData));
       if (response.error) {
-        setError(response.error.message); // Set the error message from the response
-        return; // Exit the function if there's an error
+        setError(response.error.message);
+        return;
       }
-      setOrderId(response.payload.orderNo);
+      console.log("res",response.payload);
+      setOrderId(response.payload.orderId);
 
       if (paymentMethod === "Razorpay") {
         if (typeof window.Razorpay === "undefined") {
@@ -152,7 +156,6 @@ const CheckoutPage = () => {
           image: "https://example.com/logo.png",
           order_id: response.payload.order.id,
           handler: async function (response) {
-            // setPaymentSuccessful(true);
             try {
               const verifyResponse = await axios.post(
                 "/api/order/verify-payment",
@@ -168,15 +171,16 @@ const CheckoutPage = () => {
               if (
                 verifyResponse.data.message === "Payment verified successfully"
               ) {
-                // setOrderId(response.payload.orderNo);
                 setShowConfirmationModal(true);
                 dispatch(clearCart(currentUser._id));
-              } else {
-                setError("Payment verification failed");
+              } else if (verifyResponse.status === 400) {
+                setPaymentErrorMessage(verifyResponse.data.message);
+                setPaymentFailed(true);
               }
             } catch (error) {
               console.error("Payment verification error:", error);
-              setError("Payment verification failed");
+              setPaymentErrorMessage(error.message);
+              setPaymentFailed(true);
             }
           },
           prefill: {
@@ -187,20 +191,21 @@ const CheckoutPage = () => {
           theme: {
             color: "#3399cc",
           },
+          // onClose handler to mark payment as failed and redirect
+          modal: {
+            ondismiss: async () => {
+              await axios.post("/api/order/mark-payment-failed", {
+                orderId: response.payload.order.id,
+              });
+              toast.error("Payment failed. Redirecting to order details...");
+              navigate(`/order/${response.payload.orderId}`);
+            },
+          },
         };
 
         const rzp1 = new window.Razorpay(options);
         rzp1.open();
-
-        // setTimeout(() => {
-        //   if (!paymentSuccessful) {
-        //     setError("Payment failed.");
-        //     dispatch(clearCart(currentUser._id));
-        //     navigate("/dashboard?tab=orders"); // Redirect to order list
-        //   }
-        // }, 6000);
       } else if (paymentMethod === "COD") {
-        // Handle Cash on Delivery
         dispatch(clearCart(currentUser._id));
         setOrderId(response.payload.orderNo);
         setShowConfirmationModal(true);
@@ -458,6 +463,18 @@ const CheckoutPage = () => {
 
           {/* Coupon Code */}
           <Card className="p-6 rounded-lg shadow-md">
+            {/* List of Available Coupons */}
+            <div className="mt-4">
+              <h4 className="text-lg font-semibold">Available Coupons:</h4>
+              <ul className="list-disc list-inside">
+                {availableCoupons.map((coupon, index) => (
+                  <li key={index} className="text-gray-700">
+                    {coupon.code} -{" "}
+                    <span className="text-red-500">{coupon.discount}% off</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
             <h3 className="text-xl font-bold mb-4">Have a Coupon?</h3>
             <div className="flex mb-4">
               <input
@@ -753,6 +770,42 @@ const CheckoutPage = () => {
                 className="w-full"
               >
                 View Order
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
+      {/* Payment Failure Modal */}
+      <Modal
+        show={paymentFailed}
+        onClose={() => setPaymentFailed(false)}
+        popup
+        size="md"
+      >
+        <Modal.Header />
+        <Modal.Body>
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-red-600">
+              Payment Failed
+            </h3>
+            <p className="mt-2">{paymentErrorMessage}</p>
+            <div className="flex justify-center gap-4 mt-4">
+              <Button
+                color="success"
+                onClick={() => {
+                  setPaymentFailed(false);
+                  handlePlaceOrder(); // Retry the payment
+                }}
+                className="w-full"
+              >
+                Retry
+              </Button>
+              <Button
+                color="gray"
+                onClick={() => setPaymentFailed(false)}
+                className="w-full"
+              >
+                Exit
               </Button>
             </div>
           </div>

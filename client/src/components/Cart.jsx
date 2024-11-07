@@ -21,7 +21,7 @@ const CartPage = () => {
 
   useEffect(() => {
     // Initialize local quantities with current cart items quantities
-    const initialQuantities = cartItems.items.reduce((acc, item) => {
+    const initialQuantities = cartItems.items?.reduce((acc, item) => {
       acc[item.bookId] = item.quantity;
       return acc;
     }, {});
@@ -29,7 +29,7 @@ const CartPage = () => {
   }, [cartItems]);
 
   const totalCartAmount = (cartItems?.items || []).reduce((sum, current) => {
-    const quantity = localQuantities[current.bookId] || current.quantity;
+    const quantity = localQuantities[current.bookId] || current?.quantity;
     return sum + (current.discountedPrice || 0) * quantity; // Ensure discountedPrice is defined
   }, 0);
 
