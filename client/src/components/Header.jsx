@@ -8,7 +8,6 @@ import { signoutSuccess } from "../redux/user/userSlice";
 import { toggleTheme } from "../redux/theme/themeSlice";
 import { RiShoppingCart2Line } from "react-icons/ri";
 
-
 export default function Header() {
   const path = useLocation().pathname;
   const { currentUser } = useSelector((state) => state.user);
@@ -128,9 +127,14 @@ export default function Header() {
             </Dropdown>
           </>
         ) : (
-          <Link to="/sign-in">
+          // <Link to="/sign-in">
+          //   <Button gradientDuoTone="purpleToBlue" outline>
+          //     Sign In
+          //   </Button>
+          // </Link>
+          <Link to={path === "/sign-in" ? "/sign-up" : "/sign-in"}>
             <Button gradientDuoTone="purpleToBlue" outline>
-              Sign In
+              {path === "/sign-in" ? "Sign Up" : "Sign In"}
             </Button>
           </Link>
         )}
