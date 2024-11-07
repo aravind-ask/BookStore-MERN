@@ -14,6 +14,15 @@
   display: none; /* Chrome, Safari, and Opera */
 }
 
+/* Add this to your CSS to hide scrollbars */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
 
 .tooltip {
   transition: opacity 0.3s ease;

@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
-import { Badge, Card, Button, Spinner, Alert } from "flowbite-react";
+import { Badge, Card, Button, Spinner, Alert, Modal } from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
-import { fetchOrderDetails } from "../redux/order/orderSlice"; // Assuming you have a slice to fetch order details
+import {
+  cancelOrderItem,
+  fetchOrderDetails,
+  returnOrderItem,
+} from "../redux/order/orderSlice"; // Assuming you have a slice to fetch order details
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 
@@ -18,6 +22,12 @@ const OrderDetails = () => {
   );
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [cancelledOrderId, setCancelledOrderId] = useState("");
+  const [cancelledItemId, setCancelledItemId] = useState("");
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     async function loadOrderDetails() {
@@ -104,6 +114,54 @@ const OrderDetails = () => {
     }
   };
 
+  const handleCancel = (orderId, itemId) => {
+    setCancelledOrderId(orderId);
+    setCancelledItemId(itemId);
+    setShowModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    try {
+      await dispatch(
+        cancelOrderItem({
+          orderId: cancelledOrderId,
+          itemId: cancelledItemId,
+          cancelReason,
+        })
+      );
+      setShowModal(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleReturn = (orderId, itemId) => {
+    setCancelledOrderId(orderId);
+    setCancelledItemId(itemId);
+    setShowReturnModal(true);
+  };
+
+  const handleConfirmReturn = async () => {
+    try {
+      const response = await dispatch(
+        returnOrderItem({
+          orderId: cancelledOrderId,
+          itemId: cancelledItemId,
+          returnReason,
+        })
+      );
+      console.log(response);
+      setShowReturnModal(false); // Show a success message or toast
+      // Toast.success(
+      //   `Refund of ₹${response.payload.refundAmount} processed successfully`
+      // );
+    } catch (error) {
+      console.error(error);
+      // Show an error message or toast
+      // Toast.error("Failed to process return");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -178,7 +236,7 @@ const OrderDetails = () => {
             {orderDetails?.cartItems?.map((item) => (
               <Card
                 key={item._id}
-                className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0"
+                className="flex md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0"
               >
                 <div className="flex items-start space-x-4">
                   <img
@@ -197,10 +255,32 @@ const OrderDetails = () => {
                   </div>
                 </div>
                 <div className="flex justify-between items-center w-full">
-                  <p className="text-lg font-bold">${item.price.toFixed(2)}</p>
+                  <p className="text-lg font-bold">₹{item.price.toFixed(2)}</p>
                   <p className="text-lg font-bold">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ₹{(item.price * item.quantity).toFixed(2)}
                   </p>
+                </div>
+                <div className="flex space-x-2 mt-2">
+                  {orderDetails?.orderSummary?.status !== "cancelled" && (
+                    <Button
+                      color="failure"
+                      onClick={() => {
+                        handleCancel(orderDetails?._id, item._id);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                  {orderDetails?.orderSummary?.status === "delivered" && (
+                    <Button
+                      color="warning"
+                      onClick={() => {
+                        handleReturn(orderDetails?._id, item._id);
+                      }}
+                    >
+                      Return
+                    </Button>
+                  )}
                 </div>
               </Card>
             ))}
@@ -214,7 +294,7 @@ const OrderDetails = () => {
             <div className="flex justify-between">
               <span>Subtotal</span>
               <span>
-                $
+                ₹
                 {orderDetails?.orderSummary?.subtotal
                   ? orderDetails.orderSummary.subtotal.toFixed(2)
                   : "0.00"}
@@ -223,7 +303,7 @@ const OrderDetails = () => {
             <div className="flex justify-between">
               <span>Tax (8%)</span>
               <span>
-                $
+                ₹
                 {orderDetails?.orderSummary?.tax
                   ? orderDetails.orderSummary.tax.toFixed(2)
                   : "0.00"}
@@ -233,7 +313,7 @@ const OrderDetails = () => {
               <div className="flex justify-between text-green-500">
                 <span>Discount</span>
                 <span>
-                  - $
+                  - ₹
                   {orderDetails?.orderSummary?.discount
                     ? orderDetails.orderSummary.discount.toFixed(2)
                     : "0.00"}
@@ -243,7 +323,7 @@ const OrderDetails = () => {
             <div className="flex justify-between font-bold">
               <span>Total</span>
               <span>
-                $
+                ₹
                 {orderDetails?.orderSummary?.total
                   ? orderDetails.orderSummary.total.toFixed(2)
                   : "0.00"}
@@ -313,6 +393,48 @@ const OrderDetails = () => {
           </Button>
         </div>
       </div>
+      <Modal show={showModal} onClose={() => setShowModal(false)}>
+        <Modal.Header>Cancel Order Item</Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to cancel this order item?</p>
+          <p>Reason for cancellation:</p>
+          <textarea
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder="Enter reason for cancellation"
+            className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={handleConfirmCancel} color="failure">
+            Confirm Cancel
+          </Button>
+          <Button onClick={() => setShowModal(false)} color="gray">
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={showReturnModal} onClose={() => setShowReturnModal(false)}>
+        <Modal.Header>Return Order Item</Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to return this order item?</p>
+          <p>Reason for return:</p>
+          <textarea
+            value={returnReason}
+            onChange={(e) => setReturnReason(e.target.value)}
+            placeholder="Enter reason for return"
+            className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={handleConfirmReturn} color="warning">
+            Confirm Return
+          </Button>
+          <Button onClick={() => setShowReturnModal(false)} color="gray">
+            Cancel
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

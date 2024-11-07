@@ -5,6 +5,7 @@ import {
   addBook,
   deleteBook,
   getBooks,
+  getCategoryWiseBooks,
   listBook,
   unlistBook,
   updateBook,
@@ -26,6 +27,7 @@ router.post(
   addBook
 );
 router.get("/getbooks", getBooks);
+router.get("/getcategorywisebooks", getCategoryWiseBooks);
 router.delete("/deletebook/:bookId/:userId", verifyToken, deleteBook);
 router.put("/update-book/:bookId/:userId", verifyToken, updateBook);
 router.patch("/listbook/:bookId/:userId", verifyToken, listBook);

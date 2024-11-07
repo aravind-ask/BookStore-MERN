@@ -188,7 +188,52 @@ export const getBooks = async (req, res, next) => {
   }
 };
 
+export const getCategoryWiseBooks = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10; // Set the default limit for books per category
 
+    const booksByCategory = await Book.aggregate([
+      {
+        $match: {
+          isListed: true, // Only include listed books
+        },
+      },
+      {
+        $lookup: {
+          from: "categories", // Ensure this matches the actual collection name in MongoDB
+          localField: "category", // This is the field in the Book model that references the Category
+          foreignField: "_id", // This is the field in the Category model that matches the ObjectId
+          as: "categoryDetails", // The output array field
+        },
+      },
+      {
+        $unwind: "$categoryDetails", // Unwind the categoryDetails array to flatten it
+      },
+      {
+        $group: {
+          _id: "$categoryDetails._id", // Grouping by the category ID
+          categoryName: { $first: "$categoryDetails.name" }, // Get the category name
+          books: { $push: "$$ROOT" }, // Push all book details into an array
+        },
+      },
+      {
+        $project: {
+          category: "$_id", // Include the category ID
+          categoryName: 1, // Include the category name
+          books: { $slice: ["$books", limit] }, // Limit the number of books per category
+        },
+      },
+    ]);
+
+    console.log("Books by Category:", booksByCategory);
+
+
+    res.status(200).json(booksByCategory);
+  } catch (error) {
+    console.error("Error fetching category-wise books:", error);
+    next(error);
+  }
+};
 
 export const deleteBook = async (req, res, next) => {
   const bookId = req.params.bookId;

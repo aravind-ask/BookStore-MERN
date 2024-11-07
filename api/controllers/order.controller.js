@@ -83,7 +83,7 @@ export const placeOrder = async (req, res, next) => {
     }
 
     if (paymentMethod === "COD") {
-      if (totalAmountWithOffers < 1000) {
+      if (totalAmountWithOffers > 1000) {
         return next(
           errorHandler(400, "COD is not available for orders below ₹1000")
         );

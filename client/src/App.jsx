@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
@@ -21,6 +21,7 @@ import OrderSuccess from "./pages/OrderSuccess";
 import PasswordReset from "./components/PasswordReset";
 import Contact from "./pages/ContactUs";
 import OrderDetails from "./components/OrderDetails";
+import AdminSignIn from "./pages/AdminSignIn";
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/admin" element={<Dashboard />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route
@@ -36,6 +38,14 @@ export default function App() {
           element={
             <LoginProtected>
               <SignIn />
+            </LoginProtected>
+          }
+        />
+        <Route
+          path="/admin/sign-in"
+          element={
+            <LoginProtected>
+              <AdminSignIn />
             </LoginProtected>
           }
         />

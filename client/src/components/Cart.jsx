@@ -15,16 +15,23 @@ const CartPage = () => {
   const [error, setError] = useState(false); // Add a state to store the error flag
   const { currentUser } = useSelector((state) => state.user);
   const { cartItems } = useSelector((state) => state.cart);
+  const [localQuantities, setLocalQuantities] = useState({}); // Local state for quantities
+
   const navigate = useNavigate();
 
-  const totalCartAmount =
-    cartItems && cartItems.items && cartItems.items.length > 0
-      ? cartItems.items.reduce(
-          (sum, current) => sum + current.discountedPrice * current.quantity,
-          0
-        )
-      : 0;
-  console.log("Cart:", cartItems);
+  useEffect(() => {
+    // Initialize local quantities with current cart items quantities
+    const initialQuantities = cartItems.items.reduce((acc, item) => {
+      acc[item.bookId] = item.quantity;
+      return acc;
+    }, {});
+    setLocalQuantities(initialQuantities);
+  }, [cartItems]);
+
+  const totalCartAmount = (cartItems?.items || []).reduce((sum, current) => {
+    const quantity = localQuantities[current.bookId] || current.quantity;
+    return sum + (current.discountedPrice || 0) * quantity; // Ensure discountedPrice is defined
+  }, 0);
 
   const dispatch = useDispatch();
 
@@ -43,6 +50,8 @@ const CartPage = () => {
       toast.error("You have reached the order limit");
       return;
     }
+
+    setLocalQuantities((prev) => ({ ...prev, [bookId]: newQuantity }));
 
     // Dispatch the updateCartQty action
     dispatch(
@@ -92,7 +101,7 @@ const CartPage = () => {
           </p>
           <Link
             className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
-            to={'/books'}
+            to={"/books"}
           >
             Explore Our Bookstore
           </Link>
@@ -159,7 +168,10 @@ const CartPage = () => {
                     onClick={() =>
                       handleQuantityChange(item.bookId, item.quantity, "minus")
                     }
-                    className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded"
+                    className={`bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded ${
+                      item.quantity === 1 ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    disabled={item.quantity === 1}
                   >
                     -
                   </button>

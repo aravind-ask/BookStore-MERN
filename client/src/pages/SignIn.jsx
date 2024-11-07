@@ -42,8 +42,6 @@ export default function SignIn() {
     return () => clearInterval(interval);
   }, [showModal, timer]);
 
-
-
   const handleSubmit = async (e, isDemo = false, demoData = null) => {
     if (e) {
       e.preventDefault();
@@ -97,8 +95,6 @@ export default function SignIn() {
     }
   };
 
-  
-
   const handleResendOtp = async () => {
     try {
       const res = await fetch("/api/auth/resend-otp", {
@@ -124,13 +120,7 @@ export default function SignIn() {
       password: "123456",
     });
   };
-
-  const handleAdminLogin = () => {
-    handleSubmit(null, true, {
-      email: "admin@gmail.com",
-      password: "123456",
-    });
-  };
+  
   return (
     <div className="min-h-screen mt-20">
       <div className="flex p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
@@ -205,7 +195,10 @@ export default function SignIn() {
             <Button onClick={handleDemoLogin} gradientDuoTone="greenToBlue">
               Demo Login
             </Button>
-            <Button onClick={handleAdminLogin} gradientDuoTone="redToYellow">
+            <Button
+              onClick={() => navigate("/admin/sign-in")}
+              gradientDuoTone="redToYellow"
+            >
               Admin Login
             </Button>
           </div>

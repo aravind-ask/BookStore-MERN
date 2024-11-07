@@ -3,31 +3,30 @@ import { useEffect, useState } from "react";
 import BookCard from "../components/BookCard";
 
 export default function Home() {
-  const [books, setBooks] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [booksByCategory, setBooksByCategory] = useState([]);
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      const res = await fetch("/api/books/getbooks");
-      const data = await res.json();
-      setBooks(data.books);
-      console.log(data);
+    const fetchBooksByCategory = async () => {
+      try {
+        const res = await fetch("/api/books/getcategorywisebooks?limit=10");
+        const data = await res.json();
+        console.log(data); // Log to inspect structure if needed
+        setBooksByCategory(data);
+      } catch (error) {
+        console.error("Error fetching books by category:", error);
+        setBooksByCategory([]); // Set to empty array on error
+      }
     };
-
-    const fetchCategories = async () => {
-      const res = await fetch("/api/category/get-categories");
-      const data = await res.json();
-      console.log(data);
-      setCategories(data);
-    };
-
-    fetchBooks();
-    fetchCategories();
+    fetchBooksByCategory();
   }, []);
 
-  // Filter books by category
-  const getBooksByCategory = (categoryId) =>
-    books.filter((book) => book.category._id === categoryId);
+  // Define a specific order for categories
+  const categoryOrder = ["Novels", "Comics", "Magazines", "Others"];
+  const orderedCategories = booksByCategory.sort((a, b) => {
+    const aIndex = categoryOrder.indexOf(a.categoryName);
+    const bIndex = categoryOrder.indexOf(b.categoryName);
+    return aIndex - bIndex;
+  });
 
   return (
     <div>
@@ -69,37 +68,34 @@ export default function Home() {
       </div>
 
       {/* Category Sections */}
-      <div className="max-w-6xl mx-auto p-3 flex flex-col gap-10 py-7">
-        {categories &&
-          categories.length > 0 &&
-          categories.map((category) => {
-            const categoryBooks = getBooksByCategory(category._id);
-            return (
-              categoryBooks.length > 0 && (
-                <div key={category._id} className="flex flex-col gap-6">
-                  {/* Category Title */}
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-semibold text-gray-800">
-                      {category.name}
-                    </h2>
-                    <Link
-                      to={`/books?searchTerm=&sort=desc&category=${category._id}&showOutOfStock=true`}
-                      className="text-teal-500 hover:underline"
-                    >
-                      View all in {category.name}
-                    </Link>
-                  </div>
+      <div className="max-w-6xl mx-auto p-3">
+        <div className="flex flex-col gap-10 py-7">
+          {orderedCategories.map((category) => (
+            <div key={category.category} className="flex flex-col gap-4">
+              {/* Category Title */}
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {category.categoryName}
+                </h2>
+                <Link
+                  to={`/books?category=${category.category}`}
+                  className="text-teal-500 hover:underline"
+                >
+                  View all in {category.categoryName}
+                </Link>
+              </div>
 
-                  {/* Book Cards */}
-                  <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                    {categoryBooks.slice(0, 4).map((book) => (
-                      <BookCard key={book._id} book={book} />
-                    ))}
+              {/* Horizontal Scroll Container */}
+              <div className="flex overflow-x-auto space-x-4 scrollbar-hide pb-2">
+                {category.books.map((book) => (
+                  <div key={book._id} className="min-w-[200px]">
+                    <BookCard book={book} />
                   </div>
-                </div>
-              )
-            );
-          })}
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Call to Action */}

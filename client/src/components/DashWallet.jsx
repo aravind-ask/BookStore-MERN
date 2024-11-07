@@ -15,6 +15,11 @@ export default function DashWallet() {
       try {
         const response = await axios.get("/api/wallet");
         setBalance(response.data.balance);
+        const sortedTransactions = response.data.transactions.sort(
+          (a, b) => new Date(b.date) - new Date(a.date)
+        );
+        setTransactions(sortedTransactions);
+        console.log(response.data);
         setTransactions(response.data.transactions);
         setLoading(false);
       } catch (err) {
@@ -36,7 +41,6 @@ export default function DashWallet() {
             <FaWallet className="text-4xl text-blue-600 mr-4" />
             <div>
               <h2 className="text-2xl font-bold text-gray-800">My Wallet</h2>
-              <p className="text-sm text-gray-500">ID: </p>
             </div>
           </div>
           <div className="text-right">
@@ -81,7 +85,18 @@ export default function DashWallet() {
                   ${transaction.amount.toFixed(2)}
                 </Table.Cell>
                 <Table.Cell>{transaction.description}</Table.Cell>
-                <Table.Cell>{transaction.date}</Table.Cell>
+                <Table.Cell>
+                  {new Date(transaction.date).toLocaleDateString("en-IN", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}<br/>
+                  {new Date(transaction.date).toLocaleTimeString("en-IN", {
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                  })}
+                </Table.Cell>
               </Table.Row>
             ))}
           </Table.Body>
