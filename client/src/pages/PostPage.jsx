@@ -28,6 +28,7 @@ export default function PostPage() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
+  const [isInWishlist, setIsInWishlist] = useState(false); // New state for wishlist status
 
   // Function to open modal with selected image
   const handleImageClick = (image) => {
@@ -178,6 +179,26 @@ export default function PostPage() {
     navigate("/book/checkout", { state: { cartItems } });
   };
 
+  const checkIfInWishlist = async () => {
+    if (!currentUser || !book) return;
+
+    try {
+      const response = await fetch(
+        `/api/wishlist/check?bookId=${book._id}&userId=${currentUser._id}`
+      );
+      const data = await response.json();
+      if (data.exists) {
+        setIsInWishlist(true);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    checkIfInWishlist(); // Check if the book is in the wishlist on component mount
+  }, [book, currentUser]);
+
   const handleWishlist = async () => {
     try {
       if (!currentUser || !book) {
@@ -195,26 +216,38 @@ export default function PostPage() {
         author: book.author,
       };
 
-      const response = await fetch("/api/wishlist/add-to-wishlist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add book to wishlist");
+      let response;
+      if (isInWishlist) {
+        // Remove from wishlist
+        response = await fetch("/api/wishlist/remove", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ bookId: book._id, userId: currentUser._id }),
+        });
+      } else {
+        // Add to wishlist
+        response = await fetch("/api/wishlist/add-to-wishlist", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        });
       }
 
-      const data = await response.json();
-      // Update the UI to reflect the change
-      // For example, display a success message or update a wishlist count
-      toast.success("Book added to wishlist");
+      if (!response.ok) {
+        throw new Error("Failed to update wishlist");
+      }
+
+      setIsInWishlist(!isInWishlist); // Toggle the wishlist status
+      toast.success(
+        isInWishlist ? "Book removed from wishlist" : "Book added to wishlist"
+      );
     } catch (error) {
       console.error(error);
-      // Display an error message to the user
-      alert("Failed to add book to wishlist. Please try again later.");
+      alert("Failed to update wishlist. Please try again later.");
     }
   };
 
@@ -345,9 +378,17 @@ export default function PostPage() {
             </Button>
             <Button
               onClick={handleWishlist}
-              className="bg-white border border-gray-300 text-gray-600 px-6 py-2 rounded-full"
+              className={`border border-gray-300 px-6 py-2 rounded-full ${
+                isInWishlist
+                  ? "text-red-500 bg-white"
+                  : "bg-white text-gray-600"
+              }`}
             >
-              <i className="fas fa-heart text-lg dark:text-gray-100"></i>
+              <i
+                className={`fas fa-heart text-lg heart ${
+                  isInWishlist ? "red" : ""
+                }`}
+              ></i>
             </Button>
           </div>
           <div className="flex items-center mt-4 mb-4 dark:text-gray-100">

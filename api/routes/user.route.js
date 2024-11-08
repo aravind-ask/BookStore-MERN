@@ -1,9 +1,9 @@
 import express from "express";
-import { blockUser, deleteUser, getUser, getUsers, signout, test, unblockUser, updateUser } from "../controllers/user.controller.js";
+import { blockUser, deleteUser, getUser, getUsers, signout, test, unblockUser, updateUser, verifyUser } from "../controllers/user.controller.js";
 import { verifyToken } from "../utils/verifyUser.js";
 const router = express.Router();
 
-router.get("/test", test);
+router.get("/verify-user", verifyToken,verifyUser);
 router.post("/signout", signout);
 router.put("/update/:userId",verifyToken, updateUser);
 router.delete("/delete/:userId",verifyToken, deleteUser);

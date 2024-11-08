@@ -40,11 +40,42 @@ export const getWishlist = async (req, res, next) => {
   }
 };
 
+export const checkIfInWishlist = async (req, res, next) => {
+  try {
+    const { bookId, userId } = req.query; // Get bookId and userId from query parameters
+
+    // Check if both bookId and userId are provided
+    if (!bookId || !userId) {
+      return next(errorHandler(400, "Book ID and User ID are required"));
+    }
+
+    // Check if the book is in the user's wishlist
+    const existing = await Wishlist.findOne({ bookId, userId });
+
+    // Respond with the existence status
+    if (existing) {
+      return res.status(200).json({ exists: true });
+    } else {
+      return res.status(200).json({ exists: false });
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
+  }
+};
+
 
 export const removeFromWishlist = async (req, res, next) => {
   try {
     const { bookId, userId } = req.body; // Expecting bookId and userId in the request body
-    const removedItem = await Wishlist.findByIdAndDelete({ bookId, userId });
+
+    // Check if both bookId and userId are provided
+    if (!bookId || !userId) {
+      return next(errorHandler(400, "Book ID and User ID are required"));
+    }
+
+    // Use findOneAndDelete to remove the item based on bookId and userId
+    const removedItem = await Wishlist.findOneAndDelete({ bookId, userId });
 
     if (!removedItem) {
       return next(errorHandler(404, "Book not found in wishlist"));

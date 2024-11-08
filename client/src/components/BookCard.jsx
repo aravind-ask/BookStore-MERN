@@ -67,7 +67,7 @@ const BookCard = ({ book, removeFromWishlist, isWishlistPage }) => {
             </div>
           )} */}
           </div>
-        {isWishlistPage && (
+        {/* {isWishlistPage && (
           <button
             onClick={(event) => {
               event.stopPropagation(); // Prevent the link from being triggered
@@ -78,7 +78,7 @@ const BookCard = ({ book, removeFromWishlist, isWishlistPage }) => {
           >
             <FontAwesomeIcon icon={faTimes} />
           </button>
-        )}
+        )} */}
         </div>
       </Link>
       

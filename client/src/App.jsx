@@ -22,6 +22,7 @@ import PasswordReset from "./components/PasswordReset";
 import Contact from "./pages/ContactUs";
 import OrderDetails from "./components/OrderDetails";
 import AdminSignIn from "./pages/AdminSignIn";
+import WarningPage from "./components/Warning";
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/admin" element={<Dashboard />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/warning" element={<WarningPage />} />
         <Route
           path="/sign-in"
           element={

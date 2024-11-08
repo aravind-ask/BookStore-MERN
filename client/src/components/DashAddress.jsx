@@ -306,10 +306,19 @@ export default function DashAddress() {
           </Modal>
         </>
       ) : (
-        <div className="flex justify-center">
+        <div className="">
           <p className="text-lg font-normal text-gray-500 dark:text-gray-400">
             No addresses found.
           </p>
+          <div className="flex justify-center mt-4">
+            <Button
+              color="success"
+              onClick={() => setShowModal(true)}
+              className="w-full"
+            >
+              Add New Address
+            </Button>
+          </div>
         </div>
       )}
 

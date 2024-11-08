@@ -14,10 +14,17 @@ const CartPage = () => {
   const [message, setMessage] = useState(""); // Add a state to store the message
   const [error, setError] = useState(false); // Add a state to store the error flag
   const { currentUser } = useSelector((state) => state.user);
-  const { cartItems } = useSelector((state) => state.cart);
+  const { cartItems = { items: [] } } = useSelector((state) => state.cart);
   const [localQuantities, setLocalQuantities] = useState({}); // Local state for quantities
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // useEffect(() => {
+  //   if (currentUser) {
+  //     dispatch(fetchCartItems(currentUser._id));
+  //   }
+  // }, [dispatch, currentUser]);
 
   useEffect(() => {
     // Initialize local quantities with current cart items quantities
@@ -29,11 +36,9 @@ const CartPage = () => {
   }, [cartItems]);
 
   const totalCartAmount = (cartItems?.items || []).reduce((sum, current) => {
-    const quantity = localQuantities[current.bookId] || current?.quantity;
+    const quantity = localQuantities[current?.bookId] || current?.quantity;
     return sum + (current.discountedPrice || 0) * quantity; // Ensure discountedPrice is defined
   }, 0);
-
-  const dispatch = useDispatch();
 
   function handleQuantityChange(bookId, quantity, action) {
     const book = cartItems.items.find((item) => item.bookId === bookId);

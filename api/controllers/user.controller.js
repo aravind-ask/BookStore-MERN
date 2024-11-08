@@ -2,7 +2,7 @@ import bcryptjs from "bcryptjs";
 import { errorHandler } from "../utils/error.js";
 import User from "../models/user.model.js";
 import { Server } from "socket.io";
-const socket =new Server();
+const socket = new Server();
 
 export const test = (req, res) => {
   res.json({ message: "API is working!" });
@@ -15,6 +15,36 @@ export const signout = (req, res, next) => {
       .status(200)
       .json("User has been signed out");
   } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyUser = async (req, res, next) => {
+  try {
+    // Assuming user ID is stored in req.user after authentication middleware
+    const userId = req.user.id;
+
+    // Fetch user from the database
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isBlocked) {
+      return res.status(403).json({ message: "User is blocked" });
+    }
+
+    // Return the isBlocked status and other essential user data
+    res.status(200).json({
+      isBlocked: user.isBlocked,
+      isAdmin: user.isAdmin,
+      name: user.name,
+      email: user.email,
+      // Add any other fields as necessary
+    });
+  } catch (error) {
+    console.log(error);
     next(error);
   }
 };
@@ -166,7 +196,6 @@ export const getUsers = async (req, res, next) => {
     next(errorHandler(500, `Error fetching users: ${error.message}`));
   }
 };
-
 
 export const getUser = async (req, res, next) => {
   try {

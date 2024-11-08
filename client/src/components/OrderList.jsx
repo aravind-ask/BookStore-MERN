@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Button, Modal, Card, Badge, Select, Toast, Pagination } from "flowbite-react";
+import {
+  Button,
+  Modal,
+  Card,
+  Badge,
+  Select,
+  Toast,
+  Pagination,
+} from "flowbite-react";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 import {
   cancelOrderItem,
@@ -158,6 +166,11 @@ const OrderList = () => {
 
       {isLoading ? (
         <div>Loading...</div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="text-center mt-8">
+          <h3 className="text-lg font-semibold">You have no orders yet.</h3>
+          <p className="text-gray-500">Start shopping!</p>
+        </div>
       ) : (
         <div className="space-y-6">
           {currentOrders.map((order) => (

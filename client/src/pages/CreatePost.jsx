@@ -113,7 +113,7 @@ export default function CreatePost() {
 
       if (res.ok) {
         setPublishError(null);
-        navigate(`/`);
+        navigate(`/dashboard?tab=books`);
       }
     } catch (error) {
       setPublishError("Something went wrong");

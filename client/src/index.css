@@ -38,3 +38,26 @@
 .disabled-shade{
     opacity: 0.5;
 }
+
+.heart {
+  color: gray; /* Default color for the heart */
+  transition: color 0.3s ease; /* Smooth transition for color change */
+  cursor: pointer; /* Change cursor to pointer */
+}
+
+.heart.red {
+  color: red; /* Color when the book is in the wishlist */
+  animation: pulse 0.5s; /* Trigger animation when added to wishlist */
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1); /* Initial scale */
+  }
+  50% {
+    transform: scale(1.2); /* Scale up */
+  }
+  100% {
+    transform: scale(1); /* Scale back to original size */
+  }
+}

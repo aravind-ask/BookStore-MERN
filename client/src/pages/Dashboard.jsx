@@ -14,6 +14,8 @@ import DashCoupon from "../components/DashCoupons";
 import DashOffers from "../components/DashOffers";
 import DashSales from "../components/DashSales";
 import BestSellers from "../components/BestSellers";
+import CreatePost from "../pages/CreatePost";
+
 
 export default function Dashboard() {
   const location = useLocation();
@@ -57,6 +59,8 @@ export default function Dashboard() {
       {tab === "bestSellers" && <BestSellers />}
       {/* dashboard comp */}
       {tab === "dash" && <DashboardComp />}
+      {/* dashboard comp */}
+      {tab === "add" && <CreatePost />}
     </div>
   );
 }

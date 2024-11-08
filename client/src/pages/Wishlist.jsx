@@ -80,12 +80,12 @@ export default function Wishlist() {
           </li>
         </ol>
       </nav>
-      <div className="flex justify-between items-center mb-6">
+      {/* <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Wishlist ({wishlist.length})</h1>
         <button className="border border-black px-4 py-2">
           Move All To Bag
         </button>
-      </div>
+      </div> */}
       <div className="grid grid-cols-4 gap-6 mb-12">
         {loading ? (
           <p className="text-xl text-gray-500">Loading...</p>
