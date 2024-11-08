@@ -58,12 +58,12 @@ export default function Home() {
           >
             View all books
           </Link>
-          <Link
+          {/* <Link
             to="/create-post"
             className="text-xs sm:text-sm text-teal-500 font-bold hover:underline"
           >
             List a Book
-          </Link>
+          </Link> */}
         </div>
       </div>
 
