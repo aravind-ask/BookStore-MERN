@@ -1,5 +1,5 @@
 import { Avatar, Button, Dropdown, Navbar, TextInput } from "flowbite-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { AiOutlineSearch } from "react-icons/ai";
 import { FaMoon, FaSun } from "react-icons/fa";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ export default function Header() {
   const dispatch = useDispatch();
   const { theme } = useSelector((state) => state.theme);
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -48,6 +49,7 @@ export default function Header() {
       console.log(error.message);
     }
   };
+
   return (
     <Navbar className="border-b-2">
       <Link
@@ -58,20 +60,43 @@ export default function Header() {
           ReBook
         </span>
       </Link>
-      <form onSubmit={handleSubmit}>
+
+      {/* Desktop Search Bar */}
+      <form onSubmit={handleSubmit} className="hidden lg:inline">
         <TextInput
           type="text"
           placeholder="Search..."
-          // rightIcon={AiOutlineSearch}
           className="hidden lg:inline"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </form>
-      <Button className="w-12 h-10 lg:hidden" color="gray" pill>
+
+      {/* Mobile Search Button */}
+      <Button
+        className="lg:hidden"
+        color="gray"
+        pill
+        onClick={() => setShowMobileSearch(!showMobileSearch)}
+      >
         <AiOutlineSearch />
       </Button>
-      <div className="flex gap-2 md:order-2">
+
+      {/* Mobile Search Input */}
+      {showMobileSearch && (
+        <form onSubmit={handleSubmit} className="w-full mt-2 lg:hidden">
+          <TextInput
+            type="text"
+            placeholder="Search..."
+            className="block w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </form>
+      )}
+
+      <div className="flex gap-2 md:order-2 items-center">
+        {/* Theme Toggle */}
         <Button
           className="w-12 h-10 hidden sm:inline"
           color="gray"
@@ -127,11 +152,6 @@ export default function Header() {
             </Dropdown>
           </>
         ) : (
-          // <Link to="/sign-in">
-          //   <Button gradientDuoTone="purpleToBlue" outline>
-          //     Sign In
-          //   </Button>
-          // </Link>
           <Link to={path === "/sign-in" ? "/sign-up" : "/sign-in"}>
             <Button gradientDuoTone="purpleToBlue" outline>
               {path === "/sign-in" ? "Sign Up" : "Sign In"}
@@ -140,6 +160,7 @@ export default function Header() {
         )}
         <Navbar.Toggle />
       </div>
+
       <Navbar.Collapse>
         <Navbar.Link active={path === "/"} as={"div"}>
           <Link to="/">Home</Link>
@@ -147,9 +168,6 @@ export default function Header() {
         <Navbar.Link active={path === "/books"} as={"div"}>
           <Link to="/books">Buy Books</Link>
         </Navbar.Link>
-        {/* <Navbar.Link active={path === "/create-post"} as={"div"}>
-          <Link to="/create-post">Sell Books</Link>
-        </Navbar.Link> */}
         <Navbar.Link active={path === "/about"} as={"div"}>
           <Link to="/about">About</Link>
         </Navbar.Link>
