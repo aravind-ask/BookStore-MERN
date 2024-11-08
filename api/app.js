@@ -17,6 +17,7 @@ import couponRoutes from "./routes/coupon.routes.js";
 import offerRoutes from "./routes/offer.routes.js";
 import salesRoutes from "./routes/sales.routes.js";
 import cookieParser from "cookie-parser";
+import path from "path";
 
 dotenv.config();
 
@@ -38,24 +39,32 @@ mongoose
   .then(() => console.log("Database Connected"))
   .catch((err) => console.error(err));
 
+const __dirname = path.resolve();
+
 //Routes
 app.use("/api/user", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
-app.use("/api/rating", ratingRoutes)
-app.use("/api/category", categoryRoutes)
-app.use("/api/wishlist", wishlistRoutes)
-app.use("/api/cart", cartRoutes)
-app.use("/api/address", addressRoutes)
-app.use("/api/order", orderRoutes)
-app.use("/api/wallet", walletRoutes)
-app.use("/api/coupon", couponRoutes)
-app.use("/api/offer", offerRoutes)
-app.use("/api/sales", salesRoutes)
+app.use("/api/rating", ratingRoutes);
+app.use("/api/category", categoryRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/address", addressRoutes);
+app.use("/api/order", orderRoutes);
+app.use("/api/wallet", walletRoutes);
+app.use("/api/coupon", couponRoutes);
+app.use("/api/offer", offerRoutes);
+app.use("/api/sales", salesRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+app.use(express.static(path.join(__dirname, "/client/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "client", "dist", "index.html"));
 });
 
 // Middleware for error messages

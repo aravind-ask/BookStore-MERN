@@ -134,7 +134,7 @@ const CheckoutPage = () => {
         setError(response.error.message);
         return;
       }
-      console.log("res",response.payload);
+      console.log("res", response.payload);
       setOrderId(response.payload.orderId);
 
       if (paymentMethod === "Razorpay") {
@@ -360,8 +360,6 @@ const CheckoutPage = () => {
   return (
     <div className="max-w-6xl mx-auto p-6 pt-10">
       <h2 className="text-3xl font-bold mb-6">Checkout</h2>
-      {error && <p className="text-red-500 mt-2">{error}</p>}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Order Details and Address */}
         <div className="lg:col-span-2 space-y-6">
@@ -385,15 +383,19 @@ const CheckoutPage = () => {
               {addressList.map((address) => (
                 <div
                   key={address._id}
-                  className={`bg-white dark:bg-gray-800 shadow-md rounded-md p-4 cursor-pointer border-2 ${
+                  className={`bg-white dark:bg-gray-800 shadow-md rounded-md p-4 cursor-pointer border-2 transition-transform duration-300 transform hover:scale-105 ${
                     selectedAddress === address
-                      ? "border-blue-500"
+                      ? "border-blue-500 bg-blue-50"
                       : "border-transparent"
                   }`}
                   onClick={() => handleAddressChange(address)}
                 >
                   <div className="flex items-center mb-2">
-                    <FontAwesomeIcon icon={faMapMarker} size="lg" />
+                    <FontAwesomeIcon
+                      icon={faMapMarker}
+                      size="lg"
+                      className="text-blue-500"
+                    />
                     <span className="ml-2">
                       {address.street}, {address.city}, {address.state}{" "}
                       {address.zip}
@@ -412,7 +414,7 @@ const CheckoutPage = () => {
                       setAddressToEdit(address);
                       setShowEditModal(true);
                     }}
-                    className="w-full mt-2"
+                    className="w-full mt-2 hover:bg-gray-300 transition-colors duration-200"
                   >
                     Edit
                   </Button>
@@ -527,7 +529,7 @@ const CheckoutPage = () => {
               </div>
             </div>
           </Card>
-
+          {error && <p className="text-red-500 mt-2">{error}</p>}
           {/* Place Order Button */}
           <Button
             onClick={handlePlaceOrder}
