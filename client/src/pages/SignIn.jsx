@@ -208,7 +208,7 @@ export default function SignIn() {
               {errorMessage}
             </Alert>
           )}
-          <div className="flex gap-2 mt-5">
+          {/* <div className="flex gap-2 mt-5">
             <Button onClick={handleDemoLogin} gradientDuoTone="greenToBlue">
               Demo Login
             </Button>
@@ -218,7 +218,7 @@ export default function SignIn() {
             >
               Admin Login
             </Button>
-          </div>
+          </div> */}
         </div>
       </div>
       {/* Modal for OTP verification */}

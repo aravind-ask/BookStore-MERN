@@ -120,11 +120,11 @@ export default function AdminSignIn() {
               {errorMessage}
             </Alert>
           )}
-          <div className="flex gap-2 mt-5">
+          {/* <div className="flex gap-2 mt-5">
             <Button onClick={handleAdminLogin} gradientDuoTone="redToYellow">
               Admin Login
             </Button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
